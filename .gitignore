@@ -1,0 +1,10 @@
+# scraper intermediate output (the site consumes /jobs.json at repo root)
+scraper/out/
+
+# netlify
+.netlify/
+
+# os / editor
+.DS_Store
+Thumbs.db
+node_modules/

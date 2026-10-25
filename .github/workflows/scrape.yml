@@ -1,0 +1,42 @@
+name: Refresh job feed
+
+on:
+  schedule:
+    # every 6 hours
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Scrape public ATS feeds
+        run: python scraper/scrape.py
+
+      - name: Commit refreshed feed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add jobs.json
+          if git diff --cached --quiet; then
+            echo "No feed changes."
+          else
+            COUNT=$(python -c "import json;print(len(json.load(open('jobs.json'))))")
+            git commit -m "chore: refresh job feed (${COUNT} jobs) [skip ci]"
+            git push
+          fi
