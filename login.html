@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Log In | RadarJobs</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background:#121317; color:#e3e2e8; font-family:'IBM Plex Sans',system-ui,sans-serif; }
+  .font-display { font-family:'IBM Plex Mono',monospace; }
+  input { color-scheme: dark; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<header class="w-full border-b border-[#4d4354]/40">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <a href="index.html" class="font-display text-base font-semibold tracking-tight text-[#ddb7ff]">RADARJOBS</a>
+    <div class="flex items-center gap-5 text-sm text-[#cfc2d6]">
+      <a href="jobs.html" class="hover:text-white transition-colors">Explore Jobs</a>
+      <a href="pricing.html" class="hover:text-white transition-colors">Pro Alerts</a>
+      <a href="signup.html" class="hover:text-white transition-colors">Sign Up</a>
+    </div>
+  </div>
+</header>
+
+<main class="flex-1 flex items-center justify-center px-6 py-14">
+  <div class="w-full max-w-md">
+    <div class="mb-8 text-center">
+      <h1 class="font-display text-2xl font-semibold tracking-tight mb-2">Log in</h1>
+      <p class="text-sm text-[#cfc2d6]">Access your radar and your plan status.</p>
+    </div>
+
+    <form id="login-form" class="bg-[#1f1f24] rounded-xl p-6 flex flex-col gap-4 border border-[#4d4354]/30">
+
+      <div class="flex flex-col gap-1.5">
+        <label for="email" class="text-xs uppercase tracking-wider text-[#988d9f]">Email</label>
+        <input id="email" name="email" type="email" required autocomplete="email"
+               placeholder="you@domain.com"
+               class="w-full bg-[#121317] border border-[#4d4354]/60 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#ddb7ff] transition-colors placeholder:text-[#4d4354]"/>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="password" class="text-xs uppercase tracking-wider text-[#988d9f]">Password</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password"
+               placeholder="Your password"
+               class="w-full bg-[#121317] border border-[#4d4354]/60 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#ddb7ff] transition-colors placeholder:text-[#4d4354]"/>
+      </div>
+
+      <div id="msg" class="hidden rounded-lg px-3 py-2.5 text-sm"></div>
+
+      <button id="submit-btn" type="submit"
+              class="w-full py-3 rounded-lg bg-[#ddb7ff] text-[#490080] font-semibold text-sm hover:bg-[#f0dbff] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+        Log in
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-[#cfc2d6] mt-6">
+      No account yet?
+      <a href="signup.html" class="text-[#ddb7ff] hover:underline font-medium">Create one free</a>
+    </p>
+  </div>
+</main>
+
+<script type="module">
+import { signIn, getSession } from "./auth.js";
+
+const form = document.getElementById("login-form");
+const btn = document.getElementById("submit-btn");
+const msg = document.getElementById("msg");
+
+function show(text, kind) {
+  msg.textContent = text;
+  msg.className =
+    "rounded-lg px-3 py-2.5 text-sm " +
+    (kind === "error"
+      ? "bg-[#93000a]/40 text-[#ffdad6] border border-[#ffb4ab]/40"
+      : "bg-[#571bc1]/30 text-[#e9ddff] border border-[#d0bcff]/40");
+}
+
+// Already signed in? Skip the form.
+const existing = await getSession();
+if (existing) {
+  const next = new URLSearchParams(location.search).get("next");
+  location.href = next || "jobs.html";
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  msg.classList.add("hidden");
+  btn.disabled = true;
+  btn.textContent = "Signing in…";
+
+  try {
+    await signIn(form.email.value.trim(), form.password.value);
+    const next = new URLSearchParams(location.search).get("next");
+    location.href = next || "jobs.html";
+  } catch (err) {
+    const raw = err?.message || "";
+    const friendly = /invalid login credentials/i.test(raw)
+      ? "Wrong email or password."
+      : /email not confirmed/i.test(raw)
+        ? "You need to confirm your email first. Check your inbox."
+        : raw || "Could not log in.";
+    show(friendly, "error");
+    btn.disabled = false;
+    btn.textContent = "Log in";
+  }
+});
+</script>
+</body>
+</html>
