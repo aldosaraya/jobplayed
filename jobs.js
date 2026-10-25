@@ -51,6 +51,18 @@
     return "full-time";
   }
 
+  // El feed ya trae category/level calculados por el scraper; si faltan, se derivan.
+  function categoryOf(job) {
+    return job.category || categorize(job.title);
+  }
+
+  function levelOf(job) {
+    return job.level || seniorityOf(job.title);
+  }
+
+  const LEVEL_WEIGHT = { entry: 0, junior: 1, mid: 2, senior: 3, lead: 4 };
+  const ACCESSIBLE = new Set(["support", "admin", "data-entry", "writing", "marketing", "sales"]);
+
   function ago(iso) {
     if (!iso) return "";
     const d = new Date(iso);
@@ -193,17 +205,28 @@
       if (!hay.includes(state.q)) return false;
     }
     if (!ignoreRegion && state.region !== "all" && job.region !== state.region) return false;
-    if (state.category && categorize(job.title) !== norm(state.category)) return false;
+    if (state.category && norm(categoryOf(job)) !== norm(state.category)) return false;
     if (state.salary && salaryNum(job) < state.salary) return false;
-    if (state.seniority && seniorityOf(job.title) !== state.seniority) return false;
+    if (state.seniority && levelOf(job) !== state.seniority) return false;
     if (state.worktype && worktypeOf(job) !== state.worktype) return false;
     return true;
   }
 
   function ordered() {
     const arr = JOBS.slice();
-    if (state.sort === "Highest salary") arr.sort((a, b) => salaryNum(b) - salaryNum(a));
-    else arr.sort((a, b) => new Date(b.posted_at || 0) - new Date(a.posted_at || 0));
+    if (state.sort === "Highest salary") {
+      arr.sort((a, b) => salaryNum(b) - salaryNum(a));
+    } else if (state.sort === "Entry-friendly first") {
+      arr.sort((a, b) => {
+        const lw = (LEVEL_WEIGHT[levelOf(a)] ?? 2) - (LEVEL_WEIGHT[levelOf(b)] ?? 2);
+        if (lw !== 0) return lw;
+        const aw = (ACCESSIBLE.has(categoryOf(a)) ? 0 : 1) - (ACCESSIBLE.has(categoryOf(b)) ? 0 : 1);
+        if (aw !== 0) return aw;
+        return new Date(b.posted_at || 0) - new Date(a.posted_at || 0);
+      });
+    } else {
+      arr.sort((a, b) => new Date(b.posted_at || 0) - new Date(a.posted_at || 0));
+    }
     return arr;
   }
 

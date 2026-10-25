@@ -42,6 +42,7 @@
 <div class="relative">
 <select id="seniority-select" class="appearance-none bg-surface-container text-on-surface font-body-sm text-body-sm px-3.5 py-3 pr-8 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
 <option value="">Seniority Level</option>
+<option value="entry">Entry level / Intern</option>
 <option value="junior">Junior</option>
 <option value="mid">Mid-Level</option>
 <option value="senior">Senior</option>
@@ -90,16 +91,21 @@
 <!-- Keyword / Disciplines Pills Row -->
 <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
 <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline mr-2 shrink-0">Category:</span>
-<button type="button" data-filter="category" data-value="data" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Data</button>
-<button type="button" data-filter="category" data-value="support" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Support</button>
-<button type="button" data-filter="category" data-value="tech" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Tech</button>
+<button type="button" data-filter="category" data-value="" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">All categories</button>
+<button type="button" data-filter="category" data-value="support" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Customer Support</button>
+<button type="button" data-filter="category" data-value="data-entry" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Data Entry</button>
+<button type="button" data-filter="category" data-value="admin" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Admin &amp; Ops</button>
+<button type="button" data-filter="category" data-value="writing" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Writing</button>
+<button type="button" data-filter="category" data-value="marketing" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Marketing</button>
+<button type="button" data-filter="category" data-value="sales" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Sales</button>
 <button type="button" data-filter="category" data-value="design" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Design</button>
 <button type="button" data-filter="category" data-value="product" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Product</button>
-<button type="button" data-filter="category" data-value="sales" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Sales</button>
-<button type="button" data-filter="category" data-value="finance" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Finance</button>
-<button type="button" data-filter="category" data-value="engineering" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Engineering</button>
+<button type="button" data-filter="category" data-value="engineering" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Engineering</button>
+<button type="button" data-filter="category" data-value="data" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Data</button>
+<button type="button" data-filter="category" data-value="ai-ml" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">AI / ML</button>
 <button type="button" data-filter="category" data-value="devops" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">DevOps</button>
-<button type="button" data-filter="category" data-value="ai-ml" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-primary/20 text-primary font-semibold hover:bg-primary/30 transition-colors shrink-0">AI / ML</button>
+<button type="button" data-filter="category" data-value="finance" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Finance</button>
+<button type="button" data-filter="category" data-value="other" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Other</button>
 </div>
 </section>
 <!-- RESULTS HEADER & TELEMETRY STREAM BAR -->
@@ -129,6 +135,7 @@
 <span class="font-label-sm text-label-sm text-outline uppercase">Sort:</span>
 <select id="sort-select" class="bg-surface-container text-on-surface font-mono-data text-mono-data px-2.5 py-1.5 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
 <option>Most recent (Scraped minutes ago)</option>
+<option>Entry-friendly first</option>
 <option>Highest salary</option>
 <option>Best match</option>
 </select>
