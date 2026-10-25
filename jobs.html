@@ -22,7 +22,7 @@
 <!-- Quick Filters Dropdowns -->
 <div class="flex flex-wrap items-center gap-2">
 <div class="relative">
-<select class="appearance-none bg-surface-container text-on-surface font-body-sm text-body-sm px-3.5 py-3 pr-8 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+<select id="salary-select" class="appearance-none bg-surface-container text-on-surface font-body-sm text-body-sm px-3.5 py-3 pr-8 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
 <option value="">Salary Range (All)</option>
 <option value="60k">> $60,000 USD / year</option>
 <option value="100k">> $100,000 USD / year</option>
@@ -31,7 +31,7 @@
 <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
 </div>
 <div class="relative">
-<select class="appearance-none bg-surface-container text-on-surface font-body-sm text-body-sm px-3.5 py-3 pr-8 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+<select id="worktype-select" class="appearance-none bg-surface-container text-on-surface font-body-sm text-body-sm px-3.5 py-3 pr-8 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
 <option value="">Work Type</option>
 <option value="full-time">Full-time</option>
 <option value="contract">Contractor (B2B)</option>
@@ -40,7 +40,7 @@
 <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
 </div>
 <div class="relative">
-<select class="appearance-none bg-surface-container text-on-surface font-body-sm text-body-sm px-3.5 py-3 pr-8 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+<select id="seniority-select" class="appearance-none bg-surface-container text-on-surface font-body-sm text-body-sm px-3.5 py-3 pr-8 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
 <option value="">Seniority Level</option>
 <option value="junior">Junior</option>
 <option value="mid">Mid-Level</option>
@@ -49,7 +49,7 @@
 </select>
 <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
 </div>
-<button class="px-4 py-3 bg-primary text-on-primary font-headline-sm text-headline-sm flex items-center gap-1.5 hover:bg-primary-fixed transition-colors rounded-DEFAULT">
+<button type="button" id="apply-filters-btn" class="px-4 py-3 bg-primary text-on-primary font-headline-sm text-headline-sm flex items-center gap-1.5 hover:bg-primary-fixed transition-colors rounded-DEFAULT">
 <span class="material-symbols-outlined text-[18px]">radar</span>
 <span>Filter</span>
 </button>
@@ -61,23 +61,23 @@
 <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline mr-2 shrink-0 flex items-center gap-1">
 <span class="material-symbols-outlined text-[14px]">public</span> Region:
             </span>
-<button class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-primary text-on-primary font-semibold flex items-center gap-1.5 shrink-0 shadow-sm">
+<button type="button" data-filter="region" data-value="all" class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-primary text-on-primary font-semibold flex items-center gap-1.5 shrink-0 shadow-sm">
 <span>All</span>
 <span class="px-1.5 py-0.2 rounded-full bg-on-primary/20 text-on-primary text-[10px]">1,842</span>
 </button>
-<button class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
+<button type="button" data-filter="region" data-value="worldwide" class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
 <span>Worldwide</span>
 <span class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-secondary text-[10px]">712</span>
 </button>
-<button class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
+<button type="button" data-filter="region" data-value="latam" class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
 <span>Latam Only</span>
 <span class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-secondary text-[10px]">485</span>
 </button>
-<button class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
+<button type="button" data-filter="region" data-value="america" class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
 <span>America Only</span>
 <span class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-secondary text-[10px]">398</span>
 </button>
-<button class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
+<button type="button" data-filter="region" data-value="eu" class="px-3 py-1.5 rounded-DEFAULT font-mono-data text-mono-data bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5 shrink-0">
 <span>EU Only</span>
 <span class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-secondary text-[10px]">247</span>
 </button>
@@ -90,16 +90,16 @@
 <!-- Keyword / Disciplines Pills Row -->
 <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
 <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline mr-2 shrink-0">Category:</span>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Data</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Support</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Tech</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Design</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Product</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Sales</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Finance</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Engineering</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">DevOps</button>
-<button class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-primary/20 text-primary font-semibold hover:bg-primary/30 transition-colors shrink-0">AI / ML</button>
+<button type="button" data-filter="category" data-value="data" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Data</button>
+<button type="button" data-filter="category" data-value="support" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Support</button>
+<button type="button" data-filter="category" data-value="tech" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Tech</button>
+<button type="button" data-filter="category" data-value="design" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Design</button>
+<button type="button" data-filter="category" data-value="product" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Product</button>
+<button type="button" data-filter="category" data-value="sales" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Sales</button>
+<button type="button" data-filter="category" data-value="finance" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">Finance</button>
+<button type="button" data-filter="category" data-value="engineering" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-secondary-container/40 text-secondary hover:bg-secondary-container/60 transition-colors shrink-0">Engineering</button>
+<button type="button" data-filter="category" data-value="devops" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors shrink-0">DevOps</button>
+<button type="button" data-filter="category" data-value="ai-ml" class="px-3 py-1 rounded-DEFAULT font-label-md text-label-md bg-primary/20 text-primary font-semibold hover:bg-primary/30 transition-colors shrink-0">AI / ML</button>
 </div>
 </section>
 <!-- RESULTS HEADER & TELEMETRY STREAM BAR -->
@@ -110,7 +110,7 @@
 </div>
 <div>
 <p class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
-              Showing <span class="text-primary font-bold">1,842</span> live job openings
+              Showing <span id="results-count" class="text-primary font-bold">5</span> live job openings
             </p>
 <p class="font-body-sm text-body-sm text-outline">Indexing Greenhouse, Lever, Ashby, Workable and YC every 90 seconds</p>
 </div>
@@ -127,7 +127,7 @@
 <!-- Sort Select -->
 <div class="flex items-center gap-1.5">
 <span class="font-label-sm text-label-sm text-outline uppercase">Sort:</span>
-<select class="bg-surface-container text-on-surface font-mono-data text-mono-data px-2.5 py-1.5 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+<select id="sort-select" class="bg-surface-container text-on-surface font-mono-data text-mono-data px-2.5 py-1.5 rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
 <option>Most recent (Scraped minutes ago)</option>
 <option>Highest salary</option>
 <option>Best match</option>
@@ -691,4 +691,185 @@
     `;
   }
 </script></main><footer class="w-full bg-surface-container-lowest border-t border-outline-variant/30 text-on-surface-variant"><div class="w-full px-gutter-desktop mx-auto py-space-xl"><div class="flex flex-wrap items-center justify-between gap-space-md pb-space-lg border-b border-outline-variant/20"><div class="flex items-center gap-space-sm"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Sources Ingested in Real Time:</span><div class="flex flex-wrap items-center gap-2"><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">LinkedIn</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Greenhouse</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Lever</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Y Combinator</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Ashby</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Workable</span></div></div><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span><span class="font-mono-data text-body-sm text-primary">Indexing engine active (99.98% uptime)</span></div></div><div class="flex flex-col md:flex-row items-center justify-between gap-space-md pt-space-lg"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-body-md text-on-surface">RadarJobs © 2025</span><span class="text-outline text-body-sm">•</span><span class="font-body-sm text-body-sm text-on-surface-variant">Telemetry and scraping terminal for high-impact job openings.</span></div><div class="flex flex-wrap items-center gap-space-lg"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Newsletter</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="explorar-trabajos" href="jobs.html">Feed RSS</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="aviso-legal" href="#">Legal Notice</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacidad" href="#">Privacy</a><a class="font-body-sm text-body-sm text-primary hover:text-primary-fixed transition-colors" data-path="alertas-pro" href="pricing.html">Pro Subscription</a></div></div></div></footer><script type="module" src="auth.js"></script>
+
+<script>
+/* ================= RadarJobs — job search / filters / sort ================= */
+(function () {
+  const container = document.getElementById("jobs-container");
+  if (!container) return;
+
+  const cards = Array.from(container.querySelectorAll("article"));
+  const norm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  // --- extraer metadatos de cada card ---
+  const meta = cards.map((card, idx) => {
+    const title = (card.querySelector("h3")?.textContent || "").trim();
+    const text = card.innerText.replace(/\s+/g, " ");
+    const company = (card.querySelector("span.font-semibold")?.textContent || "").trim();
+
+    let category = "";
+    card.querySelectorAll("span").forEach((s) => {
+      if (category) return;
+      const c = s.className || "";
+      if (c.includes("bg-surface-container-highest") && c.includes("text-secondary")) {
+        category = s.textContent.trim();
+      }
+    });
+
+    let region = "";
+    if (/Worldwide/i.test(text)) region = "worldwide";
+    else if (/Latam Only/i.test(text)) region = "latam";
+    else if (/America Only/i.test(text)) region = "america";
+    else if (/EU Only/i.test(text)) region = "eu";
+
+    const sm = text.match(/\$\s?([\d,]+)/);
+    let salary = sm ? parseInt(sm[1].replace(/,/g, ""), 10) : 0;
+    if (/\/\s*month/i.test(text)) salary *= 12;
+
+    let seniority = "mid";
+    if (/\b(junior|intern|entry)\b/i.test(title)) seniority = "junior";
+    else if (/\b(staff|principal|lead)\b/i.test(title)) seniority = "lead";
+    else if (/\bsenior\b/i.test(title)) seniority = "senior";
+
+    return { card, idx, title, company, haystack: text.toLowerCase(), category, region, salary, seniority };
+  });
+
+  const total = meta.length;
+  const state = { q: "", region: "all", category: "", salary: 0, worktype: "", seniority: "" };
+
+  // --- estilos activos / inactivos ---
+  const REG_ACTIVE = ["bg-primary", "text-on-primary", "font-semibold", "shadow-sm"];
+  const REG_IDLE = ["bg-surface-container", "text-on-surface", "hover:bg-surface-container-high", "transition-colors"];
+  const CAT_ACTIVE = ["bg-secondary-container/40", "text-secondary"];
+  const CAT_IDLE = ["bg-surface-container", "text-on-surface-variant", "hover:text-on-surface", "hover:bg-surface-container-high", "transition-colors"];
+
+  function paint(btn, active) {
+    const kind = btn.dataset.filter;
+    const A = kind === "region" ? REG_ACTIVE : CAT_ACTIVE;
+    const I = kind === "region" ? REG_IDLE : CAT_IDLE;
+    [...A, ...I].forEach((c) => btn.classList.remove(c));
+    (active ? A : I).forEach((c) => btn.classList.add(c));
+  }
+
+  const regionBtns = Array.from(document.querySelectorAll('[data-filter="region"]'));
+  const catBtns = Array.from(document.querySelectorAll('[data-filter="category"]'));
+
+  function paintAll() {
+    regionBtns.forEach((b) => paint(b, b.dataset.value === state.region));
+    catBtns.forEach((b) => paint(b, norm(b.dataset.value) === norm(state.category)));
+  }
+
+  // --- estado vacio ---
+  let empty = document.getElementById("jobs-empty-state");
+  if (!empty) {
+    empty = document.createElement("div");
+    empty.id = "jobs-empty-state";
+    empty.className =
+      "hidden text-center py-16 px-6 rounded-DEFAULT bg-surface-container-low border border-outline-variant/30";
+    empty.innerHTML =
+      '<span class="material-symbols-outlined text-[36px] text-outline block mb-3">search_off</span>' +
+      '<p class="font-headline-sm text-headline-sm text-on-surface mb-1">No openings match your filters</p>' +
+      '<p class="font-body-sm text-body-sm text-on-surface-variant">Try clearing the search or widening the salary range.</p>';
+    container.parentNode.insertBefore(empty, container.nextSibling);
+  }
+
+  function apply() {
+    let visible = 0;
+    meta.forEach((m) => {
+      let ok = true;
+      if (state.q) ok = ok && m.haystack.includes(state.q);
+      if (state.region !== "all") ok = ok && m.region === state.region;
+      if (state.category) ok = ok && norm(m.category) === norm(state.category);
+      if (state.salary) ok = ok && m.salary >= state.salary;
+      if (state.seniority) ok = ok && m.seniority === state.seniority;
+      if (state.worktype && state.worktype !== "full-time") ok = false;
+
+      m.card.style.display = ok ? "" : "none";
+      if (ok) visible++;
+    });
+
+    empty.classList.toggle("hidden", visible > 0);
+
+    const counter = document.getElementById("results-count");
+    if (counter) counter.textContent = String(visible);
+
+    // footer "Showing X - Y of Z indexed openings"
+    document.querySelectorAll("span, p, div").forEach((el) => {
+      if (el.children.length === 0 && /indexed openings/i.test(el.textContent || "")) {
+        el.textContent = `Showing ${visible ? 1 : 0} - ${visible} of ${total} indexed openings`;
+      }
+    });
+  }
+
+  function sortCards() {
+    const mode = document.getElementById("sort-select")?.value || "";
+    const ordered = [...meta];
+    if (mode === "Highest salary") ordered.sort((a, b) => b.salary - a.salary);
+    else ordered.sort((a, b) => a.idx - b.idx); // default: recencia original
+    ordered.forEach((m) => container.appendChild(m.card));
+  }
+
+  // --- eventos ---
+  const input = document.getElementById("job-query-input");
+  let t;
+  input?.addEventListener("input", (e) => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      state.q = e.target.value.trim().toLowerCase();
+      apply();
+    }, 180);
+  });
+  input?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      state.q = input.value.trim().toLowerCase();
+      apply();
+    }
+  });
+
+  regionBtns.forEach((b) =>
+    b.addEventListener("click", () => {
+      state.region = b.dataset.value;
+      paintAll();
+      apply();
+    })
+  );
+
+  catBtns.forEach((b) =>
+    b.addEventListener("click", () => {
+      const v = b.dataset.value;
+      state.category = norm(state.category) === norm(v) ? "" : v; // toggle
+      paintAll();
+      apply();
+    })
+  );
+
+  document.getElementById("salary-select")?.addEventListener("change", (e) => {
+    state.salary = parseInt(e.target.value || "0", 10) * 1000;
+    apply();
+  });
+  document.getElementById("worktype-select")?.addEventListener("change", (e) => {
+    state.worktype = e.target.value;
+    apply();
+  });
+  document.getElementById("seniority-select")?.addEventListener("change", (e) => {
+    state.seniority = e.target.value;
+    apply();
+  });
+  document.getElementById("sort-select")?.addEventListener("change", () => {
+    sortCards();
+    apply();
+  });
+  document.getElementById("apply-filters-btn")?.addEventListener("click", () => {
+    state.q = (input?.value || "").trim().toLowerCase();
+    sortCards();
+    apply();
+  });
+
+  paintAll();
+  apply();
+  console.log("[radarjobs] filters ready —", total, "cards indexed");
+})();
+</script>
+
 </body></html>
