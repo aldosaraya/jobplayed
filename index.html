@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><title>RadarJobs | Find jobs before they hit the job boards</title><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary":"#d0bcff","tertiary-container":"#b175ec","on-primary-container":"#400071","error":"#ffb4ab","on-surface-variant":"#cfc2d6","secondary-container":"#571bc1","surface-container-highest":"#343439","surface-container-lowest":"#0d0e12","surface":"#121317","surface-variant":"#343439","on-background":"#e3e2e8","on-secondary-fixed-variant":"#5516be","primary-fixed":"#f0dbff","primary-container":"#b76dff","background":"#121317","on-tertiary-fixed-variant":"#62259b","on-primary-fixed-variant":"#6900b3","surface-container-high":"#292a2e","on-secondary":"#3c0091","inverse-surface":"#e3e2e8","on-error":"#690005","tertiary":"#ddb8ff","surface-dim":"#121317","on-primary":"#490080","tertiary-fixed-dim":"#ddb8ff","secondary-fixed-dim":"#d0bcff","primary":"#ddb7ff","on-secondary-container":"#c4abff","inverse-primary":"#842bd2","error-container":"#93000a","primary-fixed-dim":"#ddb7ff","on-secondary-fixed":"#23005c","on-error-container":"#ffdad6","outline-variant":"#4d4354","secondary-fixed":"#e9ddff","surface-bright":"#38393e","surface-container":"#1f1f24","inverse-on-surface":"#2f3035","outline":"#988d9f","on-tertiary-container":"#400071","on-tertiary":"#490081","tertiary-fixed":"#f0dbff","on-tertiary-fixed":"#2c0051","on-primary-fixed":"#2c0051","on-surface":"#e3e2e8","surface-tint":"#ddb7ff","surface-container-low":"#1a1b20"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xs":"0.25rem","space-sm":"0.5rem","gutter-desktop":"1.5rem","margin-desktop":"2rem","margin":"1rem","space-lg":"1.5rem","space-md":"1rem","space-xl":"2.5rem","gutter":"1rem"},"fontFamily":{"headline-lg":["IBM Plex Sans","system-ui","sans-serif"],"body-sm":["IBM Plex Sans","system-ui","sans-serif"],"label-sm":["IBM Plex Sans","system-ui","sans-serif"],"headline-sm":["IBM Plex Sans","system-ui","sans-serif"],"body-lg":["IBM Plex Sans","system-ui","sans-serif"],"body-md":["IBM Plex Sans","system-ui","sans-serif"],"display-lg-mobile":["IBM Plex Sans","system-ui","sans-serif"],"headline-md":["IBM Plex Sans","system-ui","sans-serif"],"label-md":["IBM Plex Sans","system-ui","sans-serif"],"display-lg":["IBM Plex Sans","system-ui","sans-serif"],"mono-data":["IBM Plex Mono","ui-monospace","monospace"]},"fontSize":{"headline-lg":["28px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"400"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0em","fontWeight":"400"}],"display-lg-mobile":["32px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"500"}],"display-lg":["48px",{"lineHeight":"54px","letterSpacing":"-0.025em","fontWeight":"600"}],"mono-data":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary selection:text-on-primary"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"><div class="h-16 w-full px-gutter-desktop mx-auto flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg"><a class="flex items-center gap-space-sm group" data-path="explorar-trabajos" href="#"><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight group-hover:text-primary transition-colors">RadarJobs</span><span class="font-label-sm text-label-sm uppercase px-1.5 py-0.5 rounded-DEFAULT bg-secondary-container/60 text-secondary border border-secondary/30 tracking-wider">Live Scraper v2.4</span></div></div></a><nav class="hidden xl:flex items-center gap-space-xs" data-active-classes="text-primary border-b-2 border-primary bg-surface-container/50"><a aria-current="page" class="px-3 py-2 font-label-md transition-colors text-primary border-b-2 border-primary bg-surface-container/50" data-path="explorar-trabajos" href="#">Explore Jobs</a><a class="px-3 py-2 text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="recursos-materiales" href="#">Resources & Materials</a><a class="relative px-3 py-2 text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors flex items-center gap-space-xs" data-path="alertas-pro" href="#">Pro Alerts ($4.99/mo)<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-DEFAULT bg-primary-container/20 text-primary border border-primary/40">Weekly Picks</span></a></nav></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-DEFAULT bg-surface-container-low border border-outline-variant/40"><span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span><span class="font-mono-data text-mono-data text-on-surface"><strong class="text-primary font-semibold">34,812</strong> jobs tracked today</span></div><div class="flex items-center gap-space-sm"><button aria-label="Notifications" class="relative p-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary"></span></button><div class="h-4 w-px bg-outline-variant/40"></div><div class="hidden sm:flex items-center gap-space-xs"><a class="px-3 py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="iniciar-sesion" href="#">Log In</a><a class="px-3.5 py-1.5 font-label-md text-label-md rounded-DEFAULT bg-primary text-on-primary font-semibold hover:bg-primary-fixed transition-colors" data-path="crear-cuenta" href="#">Sign Up</a></div></div></div></div></header><main class="w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Glowing Telemetry Ambient Glow -->
+<div class="relative w-full overflow-hidden">
+<!-- HERO SECTION -->
+<section class="w-full px-gutter-desktop mx-auto max-w-7xl pt-10 pb-16 relative z-10 flex flex-col items-center text-center">
+<!-- Live Sync Beacon Tag -->
+<div class="inline-flex items-center gap-space-sm px-3.5 py-1.5 rounded-DEFAULT bg-surface-container-high/90 shadow-sm backdrop-blur-md mb-8">
+<span class="relative flex h-2 w-2">
+
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+</span>
+<span class="font-mono-data text-body-sm text-secondary tracking-wide">
+          Updated in real time • <span class="text-on-surface font-semibold">+34,000 jobs extracted today</span>
+</span>
+</div>
+<!-- Main Headline -->
+<h1 class="font-display-lg text-display-lg text-on-surface tracking-tight max-w-4xl mb-6">
+        Find your next job <span class="text-primary underline decoration-primary-container/40 decoration-4 underline-offset-8">before it gets posted</span> on traditional job boards.
+      </h1>
+<!-- Subheadline -->
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
+        We track and extract openings directly from the ATS of more than 12,000 startups and global companies (<span class="text-on-surface">Greenhouse, Lever, Ashby, Workday</span>). No ghost jobs, no middlemen.
+      </p>
+<!-- Search Console Bar -->
+<div class="w-full max-w-4xl p-2 rounded-xl bg-surface-container-low shadow-xl">
+<form class="grid grid-cols-1 md:grid-cols-12 gap-2" onsubmit="event.preventDefault();">
+<!-- Keyword input -->
+<div class="md:col-span-5 flex items-center px-4 py-3 rounded-lg bg-surface-container">
+<span class="material-symbols-outlined text-outline mr-2 text-[20px]">terminal</span>
+<input class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder-outline focus:outline-none" placeholder="Role or stack (e.g. Rust, Senior Product Designer)" type="text"/>
+</div>
+<!-- Region Filter -->
+<div class="md:col-span-4 flex items-center px-4 py-3 rounded-lg bg-surface-container">
+<span class="material-symbols-outlined text-outline mr-2 text-[20px]">public</span>
+<select class="w-full bg-transparent font-body-md text-body-md text-on-surface focus:outline-none cursor-pointer">
+<option class="bg-surface-container-high text-on-surface" value="all">Worldwide (Global Remote)</option>
+<option class="bg-surface-container-high text-on-surface" value="latam">Latin America Only (Remote/Hybrid)</option>
+<option class="bg-surface-container-high text-on-surface" value="us">US Remote / Visa Sponsorship</option>
+<option class="bg-surface-container-high text-on-surface" value="eu">Europe / UK Standard</option>
+</select>
+</div>
+<!-- Action Button -->
+<div class="md:col-span-3 flex">
+<button class="w-full py-3 px-6 rounded-lg bg-primary text-on-primary font-headline-sm text-body-md flex items-center justify-center gap-2 hover:bg-primary-fixed transition-colors shadow-md" type="submit">
+<span class="material-symbols-outlined text-[18px]">travel_explore</span>
+<span>Explore Now</span>
+</button>
+</div>
+</form>
+<!-- Search Micro Tags -->
+<div class="flex flex-wrap items-center gap-2 px-3 pt-3 pb-1">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Popular searches:</span>
+<button class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-on-surface-variant font-mono-data text-body-sm hover:text-primary transition-colors" type="button">Python AI Engineer</button>
+<button class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-on-surface-variant font-mono-data text-body-sm hover:text-primary transition-colors" type="button">Product Lead Latam</button>
+<button class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-on-surface-variant font-mono-data text-body-sm hover:text-primary transition-colors" type="button">Fullstack Elixir</button>
+<button class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-on-surface-variant font-mono-data text-body-sm hover:text-primary transition-colors" type="button">Staff Data Architect</button>
+</div>
+</div>
+</section>
+<!-- LIVE TELEMETRY METRICS SECTION -->
+<section class="w-full px-gutter-desktop mx-auto max-w-7xl py-8">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Metric 1 -->
+<div class="p-6 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-sm text-label-sm uppercase text-outline">Scraped Volume</span>
+<span class="material-symbols-outlined text-primary text-[20px]">database</span>
+</div>
+<div>
+<div class="font-headline-lg text-display-lg text-on-surface font-bold tracking-tight mb-1">34,812</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Active openings indexed today, no duplicates</p>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="p-6 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-sm text-label-sm uppercase text-outline">Sweep Frequency</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">sync</span>
+</div>
+<div>
+<div class="font-headline-lg text-display-lg text-on-surface font-bold tracking-tight mb-1">12,450</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Portals analyzed in 15-minute cycles</p>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="p-6 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-sm text-label-sm uppercase text-outline">Work Flexibility</span>
+<span class="material-symbols-outlined text-primary-fixed text-[20px]">home_work</span>
+</div>
+<div>
+<div class="font-headline-lg text-display-lg text-on-surface font-bold tracking-tight mb-1">89.4%</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Openings that are 100% Remote or Async</p>
+</div>
+</div>
+<!-- Metric 4 -->
+<div class="p-6 rounded-xl bg-surface-container-high shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-sm text-label-sm uppercase text-secondary">Radar VIP Weekly</span>
+<span class="px-2 py-0.5 rounded-DEFAULT bg-primary-container text-on-primary-container font-mono-data text-body-sm font-bold">$4.99/mo</span>
+</div>
+<div>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight mb-1">Pro Curation</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">The 20 roles with the highest response rate, in your inbox</p>
+</div>
+</div>
+</div>
+</section>
+<!-- HOW SMART SCRAPING WORKS -->
+<section class="w-full px-gutter-desktop mx-auto max-w-7xl py-16">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary mb-2 block">Ingestion Architecture</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface max-w-xl">
+            How RadarJobs' smart scraping works
+          </h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">
+          We skip the middlemen. We monitor companies' direct endpoints before their openings turn into mass bidding wars.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Feature 1 -->
+<div class="p-8 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between group hover:bg-surface-container transition-colors">
+<div>
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-[26px]">hub</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Direct ATS Extraction</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              Direct connection to the public endpoints of Greenhouse, Lever, Workday and Ashby. We don't rely on secondary aggregators prone to outdated listings.
+            </p>
+</div>
+<div class="mt-8 pt-4 flex items-center gap-2 font-mono-data text-body-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">verified</span> Indexing latency < 90s
+          </div>
+</div>
+<!-- Feature 2 -->
+<div class="p-8 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between group hover:bg-surface-container transition-colors">
+<div>
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-secondary mb-6">
+<span class="material-symbols-outlined text-[26px]">filter_alt_off</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Ghost Job Removal</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              Heuristic algorithms discard frozen openings, "evergreen posts" unchanged for over 6 months, and roles with inactive recruiters.
+            </p>
+</div>
+<div class="mt-8 pt-4 flex items-center gap-2 font-mono-data text-body-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">verified</span> 99.4% effective heuristic filter
+          </div>
+</div>
+<!-- Feature 3 -->
+<div class="p-8 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between group hover:bg-surface-container transition-colors">
+<div>
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-fixed mb-6">
+<span class="material-symbols-outlined text-[26px]">payments</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Salary Ranges Revealed</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              We extract and normalize compensation directly from ATS JSON payloads, detecting real salary ranges hidden in the job posting's code.
+            </p>
+</div>
+<div class="mt-8 pt-4 flex items-center gap-2 font-mono-data text-body-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">verified</span> Normalized to USD and EUR
+          </div>
+</div>
+</div>
+</section>
+<!-- LIVE SCRAPED JOBS FEED PREVIEW -->
+<section class="w-full px-gutter-desktop mx-auto max-w-7xl py-12">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 gap-4">
+<div class="flex items-center gap-3">
+<h2 class="font-headline-lg text-headline-md text-on-surface">Latest captured openings</h2>
+<span class="font-mono-data text-body-sm px-2.5 py-0.5 rounded-DEFAULT bg-surface-container text-secondary">Live Feed</span>
+</div>
+<!-- Category Filters -->
+<div class="flex flex-wrap items-center gap-1.5 p-1 rounded-lg bg-surface-container-low">
+<button class="px-3 py-1.5 rounded-DEFAULT bg-primary text-on-primary font-label-md text-label-md">All</button>
+<button class="px-3 py-1.5 rounded-DEFAULT hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">Tech</button>
+<button class="px-3 py-1.5 rounded-DEFAULT hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">Data & AI</button>
+<button class="px-3 py-1.5 rounded-DEFAULT hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">Design</button>
+<button class="px-3 py-1.5 rounded-DEFAULT hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">Sales & GTM</button>
+</div>
+</div>
+<!-- Feed Rows -->
+<div class="flex flex-col gap-3">
+<!-- Row 1 -->
+<div class="p-5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center font-headline-sm text-primary font-bold">
+              FL
+            </div>
+<div>
+<div class="flex flex-wrap items-center gap-2 mb-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">Staff AI Infrastructure Engineer</span>
+<span class="font-mono-data text-label-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-secondary">Greenhouse Direct</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-DEFAULT bg-emerald-500/20 text-emerald-300">New (8 min ago)</span>
+</div>
+<div class="flex flex-wrap items-center gap-3 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-semibold text-on-surface">FlowOps Inc.</span>
+<span>•</span>
+<span>Remote Worldwide (UTC-3 to UTC+1 hours)</span>
+<span>•</span>
+<span class="font-mono-data text-primary font-medium">$165,000 - $195,000 USD</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-end md:self-center">
+<div class="hidden xl:flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">Kubernetes</span>
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">PyTorch</span>
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">Go</span>
+</div>
+<a class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1" href="#">
+<span>Apply</span>
+<span class="material-symbols-outlined text-[16px]">arrow_outward</span>
+</a>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="p-5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center font-headline-sm text-secondary font-bold">
+              NE
+            </div>
+<div>
+<div class="flex flex-wrap items-center gap-2 mb-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">Lead Product Designer (Design Systems)</span>
+<span class="font-mono-data text-label-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-secondary">Ashby ATS</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-DEFAULT bg-emerald-500/20 text-emerald-300">New (24 min ago)</span>
+</div>
+<div class="flex flex-wrap items-center gap-3 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-semibold text-on-surface">Nexus Ecosystem</span>
+<span>•</span>
+<span>Remote Latam / US Friendly</span>
+<span>•</span>
+<span class="font-mono-data text-primary font-medium">$95,000 - $120,000 USD</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-end md:self-center">
+<div class="hidden xl:flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">Figma Tokens</span>
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">Design Eng</span>
+</div>
+<a class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1" href="#">
+<span>Apply</span>
+<span class="material-symbols-outlined text-[16px]">arrow_outward</span>
+</a>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="p-5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center font-headline-sm text-primary-fixed font-bold">
+              QL
+            </div>
+<div>
+<div class="flex flex-wrap items-center gap-2 mb-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">Senior Analytics Engineer (dbt & Snowflake)</span>
+<span class="font-mono-data text-label-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-secondary">Lever Ingest</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-DEFAULT bg-secondary-container/50 text-secondary">42 min ago</span>
+</div>
+<div class="flex flex-wrap items-center gap-3 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-semibold text-on-surface">QuantLab Global</span>
+<span>•</span>
+<span>100% Remote (Any country)</span>
+<span>•</span>
+<span class="font-mono-data text-primary font-medium">$110,000 - $140,000 USD + Equity</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-end md:self-center">
+<div class="hidden xl:flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">dbt</span>
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">Snowflake</span>
+<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">SQL</span>
+</div>
+<a class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1" href="#">
+<span>Apply</span>
+<span class="material-symbols-outlined text-[16px]">arrow_outward</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Feed Footer CTA -->
+<div class="mt-8 flex justify-center">
+<a class="px-6 py-3 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-headline-sm text-body-md transition-colors flex items-center gap-2 shadow-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">manage_search</span>
+<span>View all 34,812 openings in the full terminal</span>
+</a>
+</div>
+</section>
+<!-- SECTION: VIP WEEKLY ALERT ($4.99/MES) -->
+<section class="w-full px-gutter-desktop mx-auto max-w-7xl py-16">
+<div class="p-8 md:p-12 rounded-2xl bg-surface-container-low shadow-xl relative overflow-hidden">
+<!-- Accent Glow Inside Card -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+<div class="lg:col-span-7">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-DEFAULT bg-primary-container/20 text-primary font-mono-data text-body-sm mb-4">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Early Detection Service</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">
+              Radar VIP Weekly Alert • Only $4.99/mo
+            </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-6 leading-relaxed">
+              Stop spending hours refreshing job boards. Every Monday morning you'll get a curated dossier in your inbox with the 25 openings with the best salary match and the fewest competing candidates, extracted exclusively in the last 72 hours.
+            </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Anti-spam filter and 0 ghost jobs</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Direct hiring contact</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Net compensation ranges</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Cancel anytime with 1 click</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-4">
+<a class="px-8 py-3.5 rounded-lg bg-primary text-on-primary font-headline-sm text-body-md font-semibold hover:bg-primary-fixed transition-colors shadow-lg" href="#">
+                Activate VIP Alerts ($4.99 USD/mo)
+              </a>
+<span class="font-body-sm text-body-sm text-outline">14-day no-questions-asked money-back guarantee</span>
+</div>
+</div>
+<!-- Visual Graphic / Sample Newsletter Card -->
+<div class="lg:col-span-5 p-6 rounded-xl bg-surface-container shadow-md">
+<div class="flex items-center justify-between pb-4 mb-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="font-headline-sm text-body-md text-on-surface font-semibold">RadarJobs VIP Issue #42</span>
+</div>
+<span class="font-mono-data text-body-sm text-outline">Monday 08:00 AM</span>
+</div>
+<div class="space-y-3 font-mono-data text-body-sm">
+<div class="p-3 rounded-DEFAULT bg-surface-container-high">
+<div class="text-primary font-semibold">1. Principal Cloud SRE @ Stripe Core</div>
+<div class="text-on-surface-variant">$190,000 - $230,000 USD • Full Remote</div>
+<div class="text-secondary text-label-sm mt-1">Extracted from Lever • 0 applicants on LinkedIn</div>
+</div>
+<div class="p-3 rounded-DEFAULT bg-surface-container-high">
+<div class="text-primary font-semibold">2. Growth Lead LATAM @ Runway ML</div>
+<div class="text-on-surface-variant">$130,000 - $160,000 USD • Flexible Remote</div>
+<div class="text-secondary text-label-sm mt-1">Extracted from Ashby • Reports directly to the CGO</div>
+</div>
+<div class="p-3 rounded-DEFAULT bg-surface-container-high">
+<div class="text-primary font-semibold">3. Senior Rust Systems @ Neon DB</div>
+<div class="text-on-surface-variant">$150,000 - $185,000 USD • Global Async</div>
+<div class="text-secondary text-label-sm mt-1">Extracted from Greenhouse • Verified Hiring Manager</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FINAL CTA BANNER -->
+<section class="w-full px-gutter-desktop mx-auto max-w-7xl pt-8 pb-20">
+<div class="p-10 md:p-14 rounded-2xl bg-surface-container text-center flex flex-col items-center justify-center relative shadow-2xl">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary mb-3">Instant Access • No Card Required</span>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-4 max-w-3xl">
+          Start applying to openings before 800 other people compete for them
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-8">
+          Join more than 18,500 engineers, designers and product leaders who use RadarJobs telemetry to land direct offers.
+        </p>
+<div class="flex flex-wrap items-center justify-center gap-4">
+<a class="px-8 py-3.5 rounded-lg bg-primary text-on-primary font-headline-sm text-body-md font-semibold hover:bg-primary-fixed transition-colors shadow-md" href="#">
+            Create Free Account
+          </a>
+<a class="px-8 py-3.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-bright font-headline-sm text-body-md transition-colors" href="#">
+            Log In
+          </a>
+</div>
+</div>
+</section>
+</div>
+</div></main><footer class="w-full bg-surface-container-lowest border-t border-outline-variant/30 text-on-surface-variant"><div class="w-full px-gutter-desktop mx-auto py-space-xl"><div class="flex flex-wrap items-center justify-between gap-space-md pb-space-lg border-b border-outline-variant/20"><div class="flex items-center gap-space-sm"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Sources Ingested in Real Time:</span><div class="flex flex-wrap items-center gap-2"><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">LinkedIn</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Greenhouse</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Lever</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Y Combinator</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Ashby</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Workable</span></div></div><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span><span class="font-mono-data text-body-sm text-primary">Indexing engine active (99.98% uptime)</span></div></div><div class="flex flex-col md:flex-row items-center justify-between gap-space-md pt-space-lg"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-body-md text-on-surface">RadarJobs © 2025</span><span class="text-outline text-body-sm">•</span><span class="font-body-sm text-body-sm text-on-surface-variant">Telemetry and scraping terminal for high-impact job openings.</span></div><div class="flex flex-wrap items-center gap-space-lg"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="recursos-materiales" href="#">Newsletter</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="explorar-trabajos" href="#">Feed RSS</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="aviso-legal" href="#">Legal Notice</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacidad" href="#">Privacy</a><a class="font-body-sm text-body-sm text-primary hover:text-primary-fixed transition-colors" data-path="alertas-pro" href="#">Pro Subscription</a></div></div></div></footer></body></html>
