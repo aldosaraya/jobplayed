@@ -392,15 +392,8 @@
 </article>
 <!-- Pagination Indicator -->
 <div class="pt-4 flex items-center justify-between">
-<span class="font-body-sm text-body-sm text-outline">Showing 1 - 5 of 1,842 indexed openings</span>
-<div class="flex items-center gap-2">
-<button class="px-3 py-1.5 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:text-on-surface text-body-sm transition-colors">Previous</button>
-<button class="px-3 py-1.5 rounded-DEFAULT bg-primary text-on-primary font-bold text-body-sm">1</button>
-<button class="px-3 py-1.5 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:text-on-surface text-body-sm transition-colors">2</button>
-<button class="px-3 py-1.5 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:text-on-surface text-body-sm transition-colors">3</button>
-<span class="text-outline">...</span>
-<button class="px-3 py-1.5 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:text-on-surface text-body-sm transition-colors">Next</button>
-</div>
+<span id="results-range" class="font-body-sm text-body-sm text-outline">Showing 0 - 0 of 0 indexed openings</span>
+<div id="pagination-controls" class="flex items-center gap-2"></div>
 </div>
 </div>
 <!-- INSPECTOR SIDE PANEL / QUICK VIEW (lg:col-span-5 xl:col-span-4) -->
@@ -693,15 +686,15 @@
 </script></main><footer class="w-full bg-surface-container-lowest border-t border-outline-variant/30 text-on-surface-variant"><div class="w-full px-gutter-desktop mx-auto py-space-xl"><div class="flex flex-wrap items-center justify-between gap-space-md pb-space-lg border-b border-outline-variant/20"><div class="flex items-center gap-space-sm"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Sources Ingested in Real Time:</span><div class="flex flex-wrap items-center gap-2"><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">LinkedIn</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Greenhouse</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Lever</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Y Combinator</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Ashby</span><span class="font-mono-data text-body-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container border border-outline-variant/40 text-on-surface">Workable</span></div></div><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span><span class="font-mono-data text-body-sm text-primary">Indexing engine active (99.98% uptime)</span></div></div><div class="flex flex-col md:flex-row items-center justify-between gap-space-md pt-space-lg"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-body-md text-on-surface">RadarJobs © 2025</span><span class="text-outline text-body-sm">•</span><span class="font-body-sm text-body-sm text-on-surface-variant">Telemetry and scraping terminal for high-impact job openings.</span></div><div class="flex flex-wrap items-center gap-space-lg"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Newsletter</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="explorar-trabajos" href="jobs.html">Feed RSS</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="aviso-legal" href="#">Legal Notice</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacidad" href="#">Privacy</a><a class="font-body-sm text-body-sm text-primary hover:text-primary-fixed transition-colors" data-path="alertas-pro" href="pricing.html">Pro Subscription</a></div></div></div></footer><script type="module" src="auth.js"></script>
 
 <script>
-/* ================= RadarJobs — job search / filters / sort ================= */
+/* ============ RadarJobs — search / filters / sort / pagination ============ */
 (function () {
   const container = document.getElementById("jobs-container");
   if (!container) return;
 
+  const PAGE_SIZE = 3;
   const cards = Array.from(container.querySelectorAll("article"));
   const norm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
-  // --- extraer metadatos de cada card ---
   const meta = cards.map((card, idx) => {
     const title = (card.querySelector("h3")?.textContent || "").trim();
     const text = card.innerText.replace(/\s+/g, " ");
@@ -734,19 +727,17 @@
     return { card, idx, title, company, haystack: text.toLowerCase(), category, region, salary, seniority };
   });
 
-  const total = meta.length;
-  const state = { q: "", region: "all", category: "", salary: 0, worktype: "", seniority: "" };
+  const state = { q: "", region: "all", category: "", salary: 0, worktype: "", seniority: "", page: 1, sort: "" };
 
-  // --- estilos activos / inactivos ---
+  /* ---------- estilos de pills ---------- */
   const REG_ACTIVE = ["bg-primary", "text-on-primary", "font-semibold", "shadow-sm"];
   const REG_IDLE = ["bg-surface-container", "text-on-surface", "hover:bg-surface-container-high", "transition-colors"];
   const CAT_ACTIVE = ["bg-secondary-container/40", "text-secondary"];
   const CAT_IDLE = ["bg-surface-container", "text-on-surface-variant", "hover:text-on-surface", "hover:bg-surface-container-high", "transition-colors"];
 
   function paint(btn, active) {
-    const kind = btn.dataset.filter;
-    const A = kind === "region" ? REG_ACTIVE : CAT_ACTIVE;
-    const I = kind === "region" ? REG_IDLE : CAT_IDLE;
+    const A = btn.dataset.filter === "region" ? REG_ACTIVE : CAT_ACTIVE;
+    const I = btn.dataset.filter === "region" ? REG_IDLE : CAT_IDLE;
     [...A, ...I].forEach((c) => btn.classList.remove(c));
     (active ? A : I).forEach((c) => btn.classList.add(c));
   }
@@ -759,13 +750,12 @@
     catBtns.forEach((b) => paint(b, norm(b.dataset.value) === norm(state.category)));
   }
 
-  // --- estado vacio ---
+  /* ---------- estado vacio ---------- */
   let empty = document.getElementById("jobs-empty-state");
   if (!empty) {
     empty = document.createElement("div");
     empty.id = "jobs-empty-state";
-    empty.className =
-      "hidden text-center py-16 px-6 rounded-DEFAULT bg-surface-container-low border border-outline-variant/30";
+    empty.className = "hidden text-center py-16 px-6 rounded-DEFAULT bg-surface-container-low border border-outline-variant/30";
     empty.innerHTML =
       '<span class="material-symbols-outlined text-[36px] text-outline block mb-3">search_off</span>' +
       '<p class="font-headline-sm text-headline-sm text-on-surface mb-1">No openings match your filters</p>' +
@@ -773,102 +763,176 @@
     container.parentNode.insertBefore(empty, container.nextSibling);
   }
 
-  function apply() {
-    let visible = 0;
-    meta.forEach((m) => {
-      let ok = true;
-      if (state.q) ok = ok && m.haystack.includes(state.q);
-      if (state.region !== "all") ok = ok && m.region === state.region;
-      if (state.category) ok = ok && norm(m.category) === norm(state.category);
-      if (state.salary) ok = ok && m.salary >= state.salary;
-      if (state.seniority) ok = ok && m.seniority === state.seniority;
-      if (state.worktype && state.worktype !== "full-time") ok = false;
+  /* ---------- matching ---------- */
+  function matches(m, ignoreRegion) {
+    if (state.q && !m.haystack.includes(state.q)) return false;
+    if (!ignoreRegion && state.region !== "all" && m.region !== state.region) return false;
+    if (state.category && norm(m.category) !== norm(state.category)) return false;
+    if (state.salary && m.salary < state.salary) return false;
+    if (state.seniority && m.seniority !== state.seniority) return false;
+    if (state.worktype && state.worktype !== "full-time") return false;
+    return true;
+  }
 
-      m.card.style.display = ok ? "" : "none";
-      if (ok) visible++;
+  function ordered() {
+    const arr = [...meta];
+    if (state.sort === "Highest salary") arr.sort((a, b) => b.salary - a.salary);
+    else arr.sort((a, b) => a.idx - b.idx);
+    return arr;
+  }
+
+  /* ---------- paginacion ---------- */
+  function buildPager(totalMatched) {
+    const wrap = document.getElementById("pagination-controls");
+    if (!wrap) return;
+    const pages = Math.max(1, Math.ceil(totalMatched / PAGE_SIZE));
+    if (state.page > pages) state.page = pages;
+    wrap.innerHTML = "";
+
+    const mk = (label, page, active, disabled) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.className = active
+        ? "px-3 py-1.5 rounded-DEFAULT bg-primary text-on-primary font-bold text-body-sm"
+        : "px-3 py-1.5 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:text-on-surface text-body-sm transition-colors";
+      if (disabled) {
+        b.disabled = true;
+        b.classList.add("opacity-40", "cursor-not-allowed");
+      } else {
+        b.addEventListener("click", () => {
+          state.page = page;
+          render();
+          container.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+      wrap.appendChild(b);
+    };
+
+    mk("Previous", Math.max(1, state.page - 1), false, state.page === 1);
+    for (let i = 1; i <= pages; i++) {
+      if (pages > 7 && i !== 1 && i !== pages && Math.abs(i - state.page) > 2) {
+        if (i === 2 || i === pages - 1) {
+          const s = document.createElement("span");
+          s.className = "text-outline px-1";
+          s.textContent = "…";
+          wrap.appendChild(s);
+        }
+        continue;
+      }
+      mk(String(i), i, i === state.page, false);
+    }
+    mk("Next", Math.min(pages, state.page + 1), false, state.page === pages);
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    const matched = ordered().filter((m) => matches(m, false));
+    const pages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+    if (state.page > pages) state.page = pages;
+
+    const from = (state.page - 1) * PAGE_SIZE;
+    const pageItems = matched.slice(from, from + PAGE_SIZE);
+
+    meta.forEach((m) => (m.card.style.display = "none"));
+    pageItems.forEach((m) => {
+      m.card.style.display = "";
+      container.appendChild(m.card);
     });
 
-    empty.classList.toggle("hidden", visible > 0);
+    empty.classList.toggle("hidden", matched.length > 0);
 
     const counter = document.getElementById("results-count");
-    if (counter) counter.textContent = String(visible);
+    if (counter) counter.textContent = String(matched.length);
 
-    // footer "Showing X - Y of Z indexed openings"
-    document.querySelectorAll("span, p, div").forEach((el) => {
-      if (el.children.length === 0 && /indexed openings/i.test(el.textContent || "")) {
-        el.textContent = `Showing ${visible ? 1 : 0} - ${visible} of ${total} indexed openings`;
-      }
+    const range = document.getElementById("results-range");
+    if (range) {
+      const a = matched.length ? from + 1 : 0;
+      const b = from + pageItems.length;
+      range.textContent = `Showing ${a} - ${b} of ${matched.length} indexed openings`;
+    }
+
+    /* badges de region con conteos reales */
+    regionBtns.forEach((btn) => {
+      const spans = btn.querySelectorAll("span");
+      if (spans.length < 2) return;
+      const v = btn.dataset.value;
+      const n = v === "all" ? meta.filter((m) => matches(m, true)).length
+                            : meta.filter((m) => matches(m, true) && m.region === v).length;
+      spans[spans.length - 1].textContent = String(n);
     });
+
+    buildPager(matched.length);
   }
 
-  function sortCards() {
-    const mode = document.getElementById("sort-select")?.value || "";
-    const ordered = [...meta];
-    if (mode === "Highest salary") ordered.sort((a, b) => b.salary - a.salary);
-    else ordered.sort((a, b) => a.idx - b.idx); // default: recencia original
-    ordered.forEach((m) => container.appendChild(m.card));
-  }
-
-  // --- eventos ---
+  /* ---------- eventos ---------- */
   const input = document.getElementById("job-query-input");
   let t;
   input?.addEventListener("input", (e) => {
     clearTimeout(t);
     t = setTimeout(() => {
       state.q = e.target.value.trim().toLowerCase();
-      apply();
+      state.page = 1;
+      render();
     }, 180);
   });
   input?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       state.q = input.value.trim().toLowerCase();
-      apply();
+      state.page = 1;
+      render();
     }
   });
 
   regionBtns.forEach((b) =>
     b.addEventListener("click", () => {
       state.region = b.dataset.value;
+      state.page = 1;
       paintAll();
-      apply();
+      render();
     })
   );
 
   catBtns.forEach((b) =>
     b.addEventListener("click", () => {
       const v = b.dataset.value;
-      state.category = norm(state.category) === norm(v) ? "" : v; // toggle
+      state.category = norm(state.category) === norm(v) ? "" : v;
+      state.page = 1;
       paintAll();
-      apply();
+      render();
     })
   );
 
   document.getElementById("salary-select")?.addEventListener("change", (e) => {
     state.salary = parseInt(e.target.value || "0", 10) * 1000;
-    apply();
+    state.page = 1;
+    render();
   });
   document.getElementById("worktype-select")?.addEventListener("change", (e) => {
     state.worktype = e.target.value;
-    apply();
+    state.page = 1;
+    render();
   });
   document.getElementById("seniority-select")?.addEventListener("change", (e) => {
     state.seniority = e.target.value;
-    apply();
+    state.page = 1;
+    render();
   });
-  document.getElementById("sort-select")?.addEventListener("change", () => {
-    sortCards();
-    apply();
+  document.getElementById("sort-select")?.addEventListener("change", (e) => {
+    state.sort = e.target.value;
+    state.page = 1;
+    render();
   });
   document.getElementById("apply-filters-btn")?.addEventListener("click", () => {
     state.q = (input?.value || "").trim().toLowerCase();
-    sortCards();
-    apply();
+    state.page = 1;
+    render();
   });
 
   paintAll();
-  apply();
-  console.log("[radarjobs] filters ready —", total, "cards indexed");
+  render();
+  console.log("[radarjobs] ready —", meta.length, "cards, page size", PAGE_SIZE);
 })();
 </script>
 
