@@ -670,6 +670,55 @@ def collect():
 
 
 # ------------------------------------------------------------------ output
+def write_rss(slim, path, limit=60):
+    """RSS 2.0 feed of the freshest non-ghost openings."""
+    from email.utils import format_datetime
+
+    base = "https://radarjobs.pages.dev"
+    items = [j for j in slim if not j.get("ghost")][:limit]
+    now = datetime.now(timezone.utc)
+
+    out = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+        "<channel>",
+        "  <title>RadarJobs — remote openings</title>",
+        f"  <link>{base}/jobs</link>",
+        "  <description>Fresh remote job openings, refreshed every 6 hours.</description>",
+        "  <language>en</language>",
+        f"  <lastBuildDate>{format_datetime(now)}</lastBuildDate>",
+        f'  <atom:link href="{base}/rss.xml" rel="self" type="application/rss+xml"/>',
+    ]
+
+    for j in items:
+        title = (j.get("title") or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        company = (j.get("company") or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        url = (j.get("url") or "").replace("&", "&amp;")
+        salary = j.get("salary_min")
+        desc = f"{company} — {j.get('region', 'worldwide')}"
+        if salary:
+            desc += f" — {salary}" + (f"-{j['salary_max']}" if j.get("salary_max") else "") + " USD"
+        pub = ""
+        if j.get("posted_at"):
+            try:
+                pub = f"\n      <pubDate>{format_datetime(datetime.fromisoformat(j['posted_at']))}</pubDate>"
+            except Exception:  # noqa: BLE001
+                pass
+        out.append(
+            "  <item>\n"
+            f"      <title>{title} @ {company}</title>\n"
+            f"      <link>{url}</link>\n"
+            f"      <guid isPermaLink=\"true\">{url}</guid>\n"
+            f"      <description>{desc}</description>{pub}\n"
+            "  </item>"
+        )
+
+    out.append("</channel>\n</rss>\n")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(out))
+    return len(items)
+
+
 def write_outputs(jobs):
     os.makedirs(OUT_DIR, exist_ok=True)
     full = os.path.join(OUT_DIR, "jobs.json")
@@ -683,6 +732,9 @@ def write_outputs(jobs):
     feed = os.path.join(ROOT, "jobs.json")
     with open(feed, "w", encoding="utf-8") as f:
         json.dump(slim, f, ensure_ascii=False, separators=(",", ":"))
+
+    n = write_rss(slim, os.path.join(ROOT, "rss.xml"))
+    print(f"  rss: {n} items")
     return full, feed, slim
 
 

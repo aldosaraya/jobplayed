@@ -425,6 +425,20 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       JOBS = await res.json();
       console.log("[radarjobs] loaded", JOBS.length, "jobs");
+
+      // Deep link from the landing page: /jobs?q=python&region=latam
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q");
+      const region = params.get("region");
+      if (q) {
+        state.q = q.trim().toLowerCase();
+        const input = document.getElementById("job-query-input");
+        if (input) input.value = q.trim();
+      }
+      if (region && ["worldwide", "latam", "america", "eu"].includes(region)) {
+        state.region = region;
+        paintAll();
+      }
       render();
     } catch (err) {
       console.error("[radarjobs] feed error", err);

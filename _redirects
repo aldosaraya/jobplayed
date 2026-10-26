@@ -1,0 +1,9 @@
+# Block internal files from being served when Pages builds from the repo root
+/scraper/*      /404.html  404
+/scraper        /404.html  404
+/.github/*      /404.html  404
+/.github        /404.html  404
+/netlify/*      /404.html  404
+/netlify.toml   /404.html  404
+/.gitignore     /404.html  404
+/README.md      /404.html  404

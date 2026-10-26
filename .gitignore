@@ -8,3 +8,7 @@ scraper/out/
 .DS_Store
 Thumbs.db
 node_modules/
+
+# python
+__pycache__/
+*.pyc
