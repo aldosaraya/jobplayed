@@ -14,7 +14,7 @@
 <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
 </span>
 <span class="font-mono-data text-body-sm text-secondary tracking-wide">
-          Updated in real time • <span class="text-on-surface font-semibold">+34,000 jobs extracted today</span>
+          Updated in real time • <span class="text-on-surface font-semibold"><span data-stat="jobs">—</span> jobs indexed</span>
 </span>
 </div>
 <!-- Main Headline -->
@@ -151,7 +151,7 @@
             </p>
 </div>
 <div class="mt-8 pt-4 flex items-center gap-2 font-mono-data text-body-sm text-secondary">
-<span class="material-symbols-outlined text-[16px]">verified</span> 99.4% effective heuristic filter
+<span class="material-symbols-outlined text-[16px]">verified</span> 30-day ghost cutoff
           </div>
 </div>
 <!-- Feature 3 -->
@@ -350,17 +350,17 @@
 <div class="p-3 rounded-DEFAULT bg-surface-container-high">
 <div class="text-primary font-semibold">1. Principal Cloud SRE @ Vantage Core</div>
 <div class="text-on-surface-variant">$190,000 - $230,000 USD • Full Remote</div>
-<div class="text-secondary text-label-sm mt-1">Extracted from Lever • 0 applicants on LinkedIn</div>
+<div class="text-secondary text-label-sm mt-1">Detected on Lever</div>
 </div>
 <div class="p-3 rounded-DEFAULT bg-surface-container-high">
 <div class="text-primary font-semibold">2. Growth Lead LATAM @ Runway ML</div>
 <div class="text-on-surface-variant">$130,000 - $160,000 USD • Flexible Remote</div>
-<div class="text-secondary text-label-sm mt-1">Extracted from Ashby • Reports directly to the CGO</div>
+<div class="text-secondary text-label-sm mt-1">Detected on Ashby</div>
 </div>
 <div class="p-3 rounded-DEFAULT bg-surface-container-high">
 <div class="text-primary font-semibold">3. Senior Rust Systems @ Neon DB</div>
 <div class="text-on-surface-variant">$150,000 - $185,000 USD • Global Async</div>
-<div class="text-secondary text-label-sm mt-1">Extracted from Greenhouse • Verified Hiring Manager</div>
+<div class="text-secondary text-label-sm mt-1">Detected on Greenhouse</div>
 </div>
 </div>
 </div>
@@ -416,24 +416,8 @@
     });
   }
 
-  // Real numbers from the feed
-  fetch("jobs.json").then(function (r) { return r.json(); }).then(function (jobs) {
-    var total = jobs.length;
-    var sources = new Set(jobs.map(function (j) { return j.source; })).size;
-    var weekAgo = Date.now() - 7 * 864e5;
-    var fresh = jobs.filter(function (j) {
-      return j.posted_at && new Date(j.posted_at).getTime() >= weekAgo;
-    }).length;
-    var pct = total ? Math.round((fresh / total) * 100) : 0;
-
-    function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
-    set("metric-jobs", total.toLocaleString("en-US"));
-    set("metric-jobs-ticker", total.toLocaleString("en-US"));
-    set("metric-total-inline", total.toLocaleString("en-US"));
-    set("metric-sources", sources);
-    set("metric-fresh", pct + "%");
-  }).catch(function () {});
 })();
 </script>
 
+<script src="stats.js" defer></script>
 </body></html>
