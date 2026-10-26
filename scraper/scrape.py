@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """
-RadarJobs scraper — pulls remote roles from public ATS APIs and job aggregators.
+RadarJobs scraper — remote roles from public ATS APIs, aggregators and RSS feeds.
 
-Sources (all public, no auth):
-  ATS         Greenhouse    boards-api.greenhouse.io/v1/boards/<token>/jobs
-              Ashby         api.ashbyhq.com/posting-api/job-board/<token>
-  Aggregators Jobicy        jobicy.com/api/v2/remote-jobs
-              Arbeitnow     arbeitnow.com/api/job-board-api
-              RemoteOK      remoteok.com/api
-              WorkingNomads workingnomads.com/api/exposed_jobs
-              Remotive      remotive.com/api/remote-jobs?category=<cat>
-              Himalayas     himalayas.app/jobs/api
+Sources (all public, no API key):
+  ATS          Greenhouse     boards-api.greenhouse.io/v1/boards/<token>/jobs
+               Ashby          api.ashbyhq.com/posting-api/job-board/<token>
+               Lever          api.lever.co/v0/postings/<company>?mode=json
+  Aggregators  remotejobs.org  remotejobs.org/api/v1/jobs          (~21k listings)
+               The Muse        themuse.com/api/public/jobs
+               Himalayas       himalayas.app/jobs/api
+               Jobicy          jobicy.com/api/v2/remote-jobs
+               RemoteOK        remoteok.com/api
+               Arbeitnow       arbeitnow.com/api/job-board-api
+               Remotive        remotive.com/api/remote-jobs
+               4dayweek.io     4dayweek.io/api/jobs
+               Working Nomads  workingnomads.com/api/exposed_jobs
+  RSS          We Work Remotely  8 category feeds + global feed
+               NoDesk             nodesk.co/remote-jobs/index.xml
+
+Ghost detection: a posting older than GHOST_DAYS (30) is flagged `ghost: true`;
+anything older than DROP_DAYS (90) is discarded as dead.
 
 Output:
   scraper/out/jobs.json   full records (gitignored)
@@ -18,7 +27,7 @@ Output:
 
 Usage:
     python scraper/scrape.py
-    python scraper/scrape.py --push     # also upsert into Supabase (needs service role key)
+    python scraper/scrape.py --push     # also upsert into Supabase (service role key)
 """
 
 import argparse
@@ -31,58 +40,66 @@ import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
-UA = {"User-Agent": "RadarJobs/1.0 (+https://jobscrapping.netlify.app)", "Accept": "application/json"}
+UA = {
+    "User-Agent": "Mozilla/5.0 (compatible; RadarJobs/1.0; +https://jobscrapping.netlify.app)",
+    "Accept": "application/json, application/xml, text/xml, */*",
+}
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# ------------------------------------------------------------------ boards
+GHOST_DAYS = 30
+DROP_DAYS = 90
+
+# ------------------------------------------------------------------ config
 GREENHOUSE_BOARDS = [
     "gitlab", "stripe", "coinbase", "affirm", "twilio", "instacart",
     "reddit", "datadog", "vercel", "discord", "dropbox", "airtable",
-    # support / ops heavy, hire globally
     "wolt", "canonical", "payoneer", "intercom", "monzo", "wise",
     "upwork", "turing", "typeform", "elastic", "n26",
 ]
 ASHBY_BOARDS = ["openai", "vanta", "posthog", "ramp", "linear", "zapier"]
+LEVER_COMPANIES = ["spotify", "toptal"]
+
+REMOTEJOBS_PAGES = 30          # 50 per page
+THEMUSE_PAGES = 15             # 20 per page, location=Remote
+HIMALAYAS_PAGES = 15           # 20 per page via offset
+FOURDAYWEEK_PAGES = 4          # 25 per page
+ARBEITNOW_PAGES = 4
 
 REMOTIVE_CATEGORIES = [
     "customer-support", "data", "design", "marketing", "sales",
     "product", "software-dev", "all-others", "finance-legal", "hr",
 ]
-ARBEITNOW_PAGES = 4
 
-# We Work Remotely publishes per-category RSS feeds.
-WWR_CATEGORIES = [
-    "remote-customer-support-jobs",
-    "remote-sales-and-marketing-jobs",
-    "remote-programming-jobs",
-    "remote-design-jobs",
-    "remote-devops-sysadmin-jobs",
-    "remote-management-and-finance-jobs",
-    "remote-product-jobs",
+WWR_FEEDS = [
+    "https://weworkremotely.com/remote-jobs.rss",
+    "https://weworkremotely.com/categories/remote-customer-support-jobs.rss",
+    "https://weworkremotely.com/categories/remote-sales-and-marketing-jobs.rss",
+    "https://weworkremotely.com/categories/remote-programming-jobs.rss",
+    "https://weworkremotely.com/categories/remote-design-jobs.rss",
+    "https://weworkremotely.com/categories/remote-devops-sysadmin-jobs.rss",
+    "https://weworkremotely.com/categories/remote-management-and-finance-jobs.rss",
+    "https://weworkremotely.com/categories/remote-product-jobs.rss",
+    "https://weworkremotely.com/categories/all-other-remote-jobs.rss",
 ]
 
-
-# ------------------------------------------------------------------ helpers
-def fetch_json(url, retries=2, timeout=30):
-    last = None
-    for attempt in range(retries + 1):
-        try:
-            req = urllib.request.Request(url, headers=UA)
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                return json.loads(r.read())
-        except Exception as e:  # noqa: BLE001
-            last = e
-            if attempt < retries:
-                time.sleep(1.2 * (attempt + 1))
-    print(f"    ! {url} -> {type(last).__name__}: {last}", file=sys.stderr)
-    return None
+# API category -> our category
+CATEGORY_HINTS = {
+    "customer support": "support", "customer service": "support", "support": "support",
+    "programming": "engineering", "software development": "engineering", "engineering": "engineering",
+    "data science": "data", "data": "data", "devops": "devops", "cyber security": "devops",
+    "design": "design", "product management": "product", "product": "product",
+    "sales": "sales", "marketing": "marketing", "finance": "finance", "legal": "finance",
+    "human resources": "admin", "admin": "admin", "writing": "writing",
+    "data entry": "data-entry", "dental": "other", "general": None,
+}
 
 
-def fetch_bytes(url, retries=2, timeout=30):
+# ------------------------------------------------------------------ http
+def _request(url, retries=2, timeout=30):
     last = None
     for attempt in range(retries + 1):
         try:
@@ -97,6 +114,31 @@ def fetch_bytes(url, retries=2, timeout=30):
     return None
 
 
+def fetch_json(url):
+    blob = _request(url)
+    if not blob:
+        return None
+    try:
+        return json.loads(blob)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def fetch_xml(url):
+    blob = _request(url)
+    if not blob:
+        return []
+    txt = blob.decode("utf-8", "ignore")
+    # tolerate undefined HTML entities (&nbsp; etc.) that break ElementTree
+    txt = re.sub(r"&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)", "&amp;", txt)
+    try:
+        return ET.fromstring(txt).findall(".//item")
+    except Exception as e:  # noqa: BLE001
+        print(f"    ! xml parse {url}: {e}", file=sys.stderr)
+        return []
+
+
+# ------------------------------------------------------------------ helpers
 def clean_text(raw, limit=4000):
     if not raw:
         return ""
@@ -111,11 +153,16 @@ def parse_date(value):
         return None
     if isinstance(value, (int, float)):
         try:
-            return datetime.fromtimestamp(value, tz=timezone.utc).isoformat()
+            return datetime.fromtimestamp(value, tz=timezone.utc)
         except Exception:  # noqa: BLE001
             return None
+    s = str(value).strip()
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(timezone.utc).isoformat()
+        return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(timezone.utc)
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        return parsedate_to_datetime(s).astimezone(timezone.utc)
     except Exception:  # noqa: BLE001
         return None
 
@@ -129,7 +176,6 @@ ASIA = r"india|pakistan|bangladesh|philippines|indonesia|vietnam|thailand|malays
 
 
 def infer_region(*parts):
-    """Maps free-form location text to the feed's region buckets."""
     blob = " ".join(str(p) for p in parts if p).lower()
 
     if re.search(r"worldwide|anywhere|global|100% remote|fully remote", blob):
@@ -170,7 +216,6 @@ def categorize(title):
         return "product"
     if re.search(r"sales|account executive|account manager|revenue|partnership|business development|\bbdr\b|\bsdr\b", t):
         return "sales"
-    # operations / people / project — roles an international candidate can realistically land
     if re.search(r"\bops\b|operations|logistics|supply chain|payment ops|gtm systems|process specialist|coordinator", t):
         return "admin"
     if re.search(r"people (ops|operations|partner)|recruit|talent|human resources|\bhr\b|sourcer", t):
@@ -189,15 +234,17 @@ def categorize(title):
 
 
 def level_of(title, hint=None):
-    h = (hint or "").lower()
-    if "entry" in h or "intern" in h:
+    if isinstance(hint, (list, tuple)):
+        hint = " ".join(str(h) for h in hint if h)
+    h = str(hint or "").lower()
+    if "entry" in h or "intern" in h or "graduate" in h:
         return "entry"
     if "junior" in h:
         return "junior"
     if "senior" in h:
         return "senior"
-    if any(k in h for k in ("lead", "principal", "director", "executive")):
-        return "lead"
+    if any(k in h for k in ("lead", "principal", "director", "executive", "manager")):
+        return "lead" if "manager" not in h else "mid"
 
     t = (title or "").lower()
     if re.search(r"\b(intern|internship|trainee|graduate|entry.level|no experience|apprentice)\b", t):
@@ -227,9 +274,7 @@ def extract_salary(text):
     def norm(v):
         v = re.sub(r"[,\s]", "", v)
         n = int(v)
-        if n < 1000:
-            n *= 1000
-        return n
+        return n * 1000 if n < 1000 else n
 
     lo, hi = norm(m.group(1)), norm(m.group(2))
     if lo < 12000 or hi < lo or hi > 2_000_000:
@@ -238,29 +283,40 @@ def extract_salary(text):
 
 
 def money(v):
-    """Normaliza salarios numéricos de las APIs (remoteok / himalayas)."""
     try:
         n = int(float(v))
     except (TypeError, ValueError):
         return None
     if n <= 0 or n > 2_000_000:
         return None
-    if n < 1000:
-        n *= 1000
-    return f"${n:,}"
+    return f"${n * 1000 if n < 1000 else n:,}"
 
 
-def build(title, company, url, source, region, tags=None, posted=None, body="", salary_hint=None, level_hint=None):
+def build(title, company, url, source, region, tags=None, posted=None, body="",
+          salary_hint=None, level_hint=None, category_hint=None):
     smin = smax = None
     if isinstance(salary_hint, tuple):
         smin, smax = salary_hint
     if not smin:
         smin, smax = extract_salary(body)
 
-    # Algunas fuentes entregan tags como string ("a, b, c") y otras como lista.
     if isinstance(tags, str):
         tags = [t.strip() for t in tags.split(",")]
     tags = [t for t in (tags or []) if t]
+
+    cat = None
+    if category_hint:
+        if isinstance(category_hint, (list, tuple)):
+            category_hint = next((c for c in category_hint if c), None)
+        if category_hint:
+            cat = CATEGORY_HINTS.get(str(category_hint).strip().lower(), "auto")
+            if cat == "auto":
+                cat = None
+    if not cat:
+        cat = categorize(title)
+
+    dt = parse_date(posted)
+    ghost = bool(dt and (datetime.now(timezone.utc) - dt) > timedelta(days=GHOST_DAYS))
 
     return {
         "title": (title or "").strip()[:180],
@@ -270,10 +326,11 @@ def build(title, company, url, source, region, tags=None, posted=None, body="", 
         "url": (url or "").strip(),
         "source": source,
         "tags": [str(t)[:32] for t in tags][:4],
-        "posted_at": posted,
+        "posted_at": dt.isoformat() if dt else None,
         "region": region,
-        "category": categorize(title),
+        "category": cat,
         "level": level_of(title, level_hint),
+        "ghost": ghost,
         "_body": clean_text(body, 600),
     }
 
@@ -281,47 +338,109 @@ def build(title, company, url, source, region, tags=None, posted=None, body="", 
 # ------------------------------------------------------------------ normalizers
 def from_greenhouse(job, board):
     loc = (job.get("location") or {}).get("name") or ""
-    body = clean_text(job.get("content"))
-    tags = [d.get("name") for d in (job.get("departments") or []) if d.get("name")]
     return build(
-        job.get("title"),
-        job.get("company_name") or board,
-        job.get("absolute_url"),
-        "greenhouse",
-        infer_region(loc),
-        tags,
-        parse_date(job.get("first_published") or job.get("updated_at")),
-        body,
+        job.get("title"), job.get("company_name") or board, job.get("absolute_url"),
+        "greenhouse", infer_region(loc),
+        [d.get("name") for d in (job.get("departments") or []) if d.get("name")],
+        job.get("first_published") or job.get("updated_at"), job.get("content"),
     )
 
 
 def from_ashby(job, board):
     loc = job.get("location") or ""
-    body = clean_text(job.get("descriptionPlain") or job.get("descriptionHtml"))
-    tags = [job.get(k) for k in ("department", "team", "employmentType") if job.get(k)]
     return build(
-        job.get("title"),
-        board,
-        job.get("jobUrl") or job.get("applyUrl"),
-        "ashby",
-        infer_region(loc, job.get("workplaceType")),
-        tags,
-        parse_date(job.get("publishedAt")),
-        body,
+        job.get("title"), board, job.get("jobUrl") or job.get("applyUrl"),
+        "ashby", infer_region(loc, job.get("workplaceType")),
+        [job.get(k) for k in ("department", "team", "employmentType") if job.get(k)],
+        job.get("publishedAt"),
+        job.get("descriptionPlain") or job.get("descriptionHtml"),
+    )
+
+
+def from_lever(job, company):
+    cats = job.get("categories") or {}
+    loc = cats.get("location") or ""
+    return build(
+        job.get("text"), company, job.get("hostedUrl"),
+        "lever", infer_region(loc, cats.get("commitment")),
+        [cats.get("team"), cats.get("department"), cats.get("commitment")],
+        job.get("createdAt"),
+        job.get("descriptionPlain") or job.get("description"),
+    )
+
+
+def from_remotejobs(item):
+    comp = item.get("company") or {}
+    cat = item.get("category") or {}
+    loc = item.get("location") or ""
+    norm = item.get("location_normalization") or {}
+    scope = norm.get("scope") if isinstance(norm, dict) else None
+    return build(
+        item.get("title"),
+        comp.get("name") if isinstance(comp, dict) else comp,
+        item.get("apply_url") or item.get("url"),
+        "remotejobs",
+        infer_region(loc, scope),
+        [cat.get("name") if isinstance(cat, dict) else cat] + (item.get("employment_types") or []),
+        item.get("posted_at"),
+        item.get("description"),
+        salary_hint=(money(item.get("salary_min")), money(item.get("salary_max"))),
+        category_hint=cat.get("name") if isinstance(cat, dict) else None,
+    )
+
+
+def from_themuse(item):
+    locs = [l.get("name") for l in (item.get("locations") or []) if l.get("name")]
+    levels = [l.get("name") for l in (item.get("levels") or []) if l.get("name")]
+    cats = [c.get("name") for c in (item.get("categories") or []) if c.get("name")]
+    comp = item.get("company") or {}
+    return build(
+        item.get("name"),
+        comp.get("name") if isinstance(comp, dict) else comp,
+        (item.get("refs") or {}).get("landing_page"),
+        "themuse",
+        infer_region(", ".join(locs)),
+        cats,
+        item.get("publication_date"),
+        item.get("contents"),
+        level_hint=levels[0] if levels else None,
+        category_hint=cats[0] if cats else None,
+    )
+
+
+def from_himalayas(item):
+    return build(
+        item.get("title"), item.get("companyName"),
+        item.get("applicationLink") or item.get("guid"),
+        "himalayas", infer_region(item.get("locationRestrictions")),
+        (item.get("categories") or [])[:4],
+        item.get("pubDate") or item.get("expiryDate"),
+        item.get("description") or item.get("excerpt"),
+        salary_hint=(money(item.get("minSalary")), money(item.get("maxSalary"))),
+        level_hint=item.get("seniority"),
     )
 
 
 def from_jobicy(item):
     return build(
-        item.get("jobTitle"),
-        item.get("companyName"),
-        item.get("url"),
-        "jobicy",
-        infer_region(item.get("jobGeo")),
+        item.get("jobTitle"), item.get("companyName"), item.get("url"),
+        "jobicy", infer_region(item.get("jobGeo")),
         [item.get("jobIndustry"), item.get("jobType")],
-        parse_date(item.get("pubDate")),
+        item.get("pubDate"),
         item.get("jobDescription") or item.get("jobExcerpt"),
         level_hint=item.get("jobLevel"),
+        category_hint=item.get("jobIndustry"),
+    )
+
+
+def from_remoteok(item):
+    return build(
+        item.get("position"), item.get("company"),
+        item.get("apply_url") or item.get("url"),
+        "remoteok", infer_region(item.get("location")),
+        item.get("tags"), item.get("date") or item.get("epoch"),
+        item.get("description"),
+        salary_hint=(money(item.get("salary_min")), money(item.get("salary_max"))),
     )
 
 
@@ -329,101 +448,78 @@ def from_arbeitnow(item):
     if not item.get("remote"):
         return None
     return build(
-        item.get("title"),
-        item.get("company_name"),
-        item.get("url"),
-        "arbeitnow",
-        infer_region(item.get("location")),
+        item.get("title"), item.get("company_name"), item.get("url"),
+        "arbeitnow", infer_region(item.get("location")),
         item.get("tags") or item.get("job_types"),
-        parse_date(item.get("created_at")),
-        item.get("description"),
-    )
-
-
-def from_remoteok(item):
-    return build(
-        item.get("position"),
-        item.get("company"),
-        item.get("apply_url") or item.get("url"),
-        "remoteok",
-        infer_region(item.get("location")),
-        item.get("tags"),
-        parse_date(item.get("date") or item.get("epoch")),
-        item.get("description"),
-        salary_hint=(money(item.get("salary_min")), money(item.get("salary_max"))),
-    )
-
-
-def from_workingnomads(item):
-    tags = item.get("tags")
-    if isinstance(tags, str):
-        tags = [t.strip() for t in tags.split(",")]
-    return build(
-        item.get("title"),
-        item.get("company_name"),
-        item.get("url"),
-        "workingnomads",
-        infer_region(item.get("location")),
-        [item.get("category_name")] + list(tags or [])[:3],
-        parse_date(item.get("pub_date")),
-        item.get("description"),
+        item.get("created_at"), item.get("description"),
     )
 
 
 def from_remotive(item):
     return build(
-        item.get("title"),
-        item.get("company_name"),
-        item.get("url"),
-        "remotive",
-        infer_region(item.get("candidate_required_location")),
+        item.get("title"), item.get("company_name"), item.get("url"),
+        "remotive", infer_region(item.get("candidate_required_location")),
         [item.get("category"), item.get("job_type")],
-        parse_date(item.get("publication_date")),
-        item.get("description"),
+        item.get("publication_date"), item.get("description"),
+        category_hint=item.get("category"),
     )
 
 
-def from_himalayas(item):
+def from_4dayweek(item):
+    locs = item.get("locations") or []
+    if isinstance(locs, list):
+        loc_txt = ", ".join(str(l.get("country") or l.get("continent") or "") for l in locs if isinstance(l, dict))
+    else:
+        loc_txt = str(locs)
+    slug = item.get("slug") or ""
     return build(
-        item.get("title"),
-        item.get("companyName"),
-        item.get("applicationLink") or item.get("guid"),
-        "himalayas",
-        infer_region(item.get("locationRestrictions")),
-        (item.get("categories") or [])[:4],
-        parse_date(item.get("pubDate") or item.get("expiryDate")),
-        item.get("description") or item.get("excerpt"),
-        salary_hint=(money(item.get("minSalary")), money(item.get("maxSalary"))),
+        item.get("title"), item.get("company_name"),
+        f"https://4dayweek.io/job/{slug}" if slug else None,
+        "4dayweek", infer_region(loc_txt, item.get("work_arrangement")),
+        [item.get("category"), item.get("schedule_type")],
+        item.get("inserted") or item.get("posted"),
+        "",
+        salary_hint=(money(item.get("salary_lower")), money(item.get("salary_upper"))),
+        level_hint=item.get("level"),
+        category_hint=item.get("category"),
+    )
+
+
+def from_workingnomads(item):
+    return build(
+        item.get("title"), item.get("company_name"), item.get("url"),
+        "workingnomads", infer_region(item.get("location")),
+        [item.get("category_name")] + list(
+            [t.strip() for t in (item.get("tags") or "").split(",")] if isinstance(item.get("tags"), str) else (item.get("tags") or [])
+        )[:3],
+        item.get("pub_date"), item.get("description"),
+        category_hint=item.get("category_name"),
     )
 
 
 def from_wwr(item):
-    """We Work Remotely RSS item. Titles look like 'Company: Job Title'."""
     title = item.findtext("title") or ""
     company, _, role = title.partition(": ")
     if not role:
         company, role = "", title
-
     skills = item.findtext("skills") or ""
     tags = [item.findtext("category")] + [s.strip() for s in skills.split(",") if s.strip()][:3]
-
-    posted = None
-    pub = item.findtext("pubDate")
-    if pub:
-        try:
-            posted = parsedate_to_datetime(pub).astimezone(timezone.utc).isoformat()
-        except Exception:  # noqa: BLE001
-            posted = None
-
     return build(
-        role,
-        company,
-        item.findtext("link"),
-        "weworkremotely",
-        infer_region(item.findtext("region"), item.findtext("country")),
-        tags,
-        posted,
-        item.findtext("description"),
+        role, company, item.findtext("link"),
+        "weworkremotely", infer_region(item.findtext("region"), item.findtext("country")),
+        tags, item.findtext("pubDate"), item.findtext("description"),
+    )
+
+
+def from_nodesk(item):
+    title = item.findtext("title") or ""
+    company, _, role = title.rpartition(" at ")
+    if not company:
+        company, role = "", title
+    return build(
+        role, company, item.findtext("link"),
+        "nodesk", infer_region(title),
+        [], item.findtext("pubDate"), item.findtext("description"),
     )
 
 
@@ -435,85 +531,139 @@ def is_remote(item):
 # ------------------------------------------------------------------ collect
 def collect():
     jobs, seen, stats = [], set(), []
+    cutoff = datetime.now(timezone.utc) - timedelta(days=DROP_DAYS)
 
     def add(item):
         if not item or not item["title"] or not item["url"]:
             return 0
         if item["url"] in seen:
             return 0
+        # descartar listados muertos (> DROP_DAYS)
+        if item["posted_at"]:
+            try:
+                if datetime.fromisoformat(item["posted_at"]) < cutoff:
+                    return 0
+            except Exception:  # noqa: BLE001
+                pass
         seen.add(item["url"])
         jobs.append(item)
         return 1
 
+    def report(name, fetched, kept):
+        stats.append((name, fetched, kept))
+        print(f"  {name:30} fetched={fetched:>5} kept={kept:>5}")
+
+    # ---------- ATS
     for board in GREENHOUSE_BOARDS:
-        data = fetch_json(f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true")
-        raw = (data or {}).get("jobs") or []
+        raw = ((fetch_json(f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true") or {}).get("jobs")) or []
         kept = 0
         for j in raw:
             item = from_greenhouse(j, board)
             if is_remote(item):
                 kept += add(item)
-        stats.append(("greenhouse", board, len(raw), kept))
-        print(f"  greenhouse/{board:12} fetched={len(raw):>4} kept={kept:>4}")
+        report(f"greenhouse/{board}", len(raw), kept)
 
     for board in ASHBY_BOARDS:
-        data = fetch_json(f"https://api.ashbyhq.com/posting-api/job-board/{board}")
-        raw = (data or {}).get("jobs") or []
+        raw = ((fetch_json(f"https://api.ashbyhq.com/posting-api/job-board/{board}") or {}).get("jobs")) or []
         kept = 0
         for j in raw:
             item = from_ashby(j, board)
             if j.get("isRemote") or is_remote(item):
                 kept += add(item)
-        stats.append(("ashby", board, len(raw), kept))
-        print(f"  ashby/{board:17} fetched={len(raw):>4} kept={kept:>4}")
+        report(f"ashby/{board}", len(raw), kept)
 
-    # ---- aggregators
-    for name, url, key, fn in [
-        ("jobicy", "https://jobicy.com/api/v2/remote-jobs?count=100", "jobs", from_jobicy),
-        ("remoteok", "https://remoteok.com/api", None, from_remoteok),
-        ("workingnomads", "https://www.workingnomads.com/api/exposed_jobs/", "jobs", from_workingnomads),
-        ("himalayas", "https://himalayas.app/jobs/api?limit=100", "jobs", from_himalayas),
+    for comp in LEVER_COMPANIES:
+        raw = fetch_json(f"https://api.lever.co/v0/postings/{comp}?mode=json") or []
+        kept = 0
+        for j in raw:
+            if not isinstance(j, dict):
+                continue
+            item = from_lever(j, comp)
+            if is_remote(item):
+                kept += add(item)
+        report(f"lever/{comp}", len(raw), kept)
+
+    # ---------- remotejobs.org (biggest source)
+    rj_total = rj_kept = 0
+    for page in range(REMOTEJOBS_PAGES):
+        data = fetch_json(f"https://remotejobs.org/api/v1/jobs?limit=50&offset={page * 50}")
+        batch = (data or {}).get("data") or []
+        rj_total += len(batch)
+        rj_kept += sum(add(from_remotejobs(x)) for x in batch if isinstance(x, dict))
+        if not (data or {}).get("pagination", {}).get("has_more"):
+            break
+        time.sleep(0.25)
+    report("remotejobs.org", rj_total, rj_kept)
+
+    # ---------- The Muse
+    tm_total = tm_kept = 0
+    for page in range(1, THEMUSE_PAGES + 1):
+        data = fetch_json(f"https://www.themuse.com/api/public/jobs?page={page}&location=Remote")
+        batch = (data or {}).get("results") or []
+        tm_total += len(batch)
+        tm_kept += sum(add(from_themuse(x)) for x in batch if isinstance(x, dict))
+        if not batch:
+            break
+        time.sleep(0.25)
+    report("themuse (Remote)", tm_total, tm_kept)
+
+    # ---------- Himalayas
+    hi_total = hi_kept = 0
+    for page in range(HIMALAYAS_PAGES):
+        data = fetch_json(f"https://himalayas.app/jobs/api?limit=20&offset={page * 20}")
+        batch = (data or {}).get("jobs") or []
+        hi_total += len(batch)
+        hi_kept += sum(add(from_himalayas(x)) for x in batch if isinstance(x, dict))
+        if not batch:
+            break
+        time.sleep(0.25)
+    report("himalayas", hi_total, hi_kept)
+
+    # ---------- 4dayweek
+    fw_total = fw_kept = 0
+    for page in range(1, FOURDAYWEEK_PAGES + 1):
+        data = fetch_json(f"https://4dayweek.io/api/jobs?page={page}")
+        batch = (data or {}).get("jobs") or []
+        fw_total += len(batch)
+        fw_kept += sum(add(from_4dayweek(x)) for x in batch if isinstance(x, dict) and not x.get("is_expired"))
+        time.sleep(0.25)
+    report("4dayweek.io", fw_total, fw_kept)
+
+    # ---------- single-shot feeds
+    for name, url, fn in [
+        ("jobicy", "https://jobicy.com/api/v2/remote-jobs?count=100", from_jobicy),
+        ("remoteok", "https://remoteok.com/api", from_remoteok),
+        ("workingnomads", "https://www.workingnomads.com/api/exposed_jobs/", from_workingnomads),
     ]:
         data = fetch_json(url)
         if isinstance(data, dict):
-            raw = data.get(key) or []
+            raw = data.get("jobs") or []
         elif isinstance(data, list):
             raw = [x for x in data if isinstance(x, dict) and "legal" not in str(x)[:40].lower()]
         else:
             raw = []
         kept = sum(add(fn(x)) for x in raw if isinstance(x, dict))
-        stats.append((name, "-", len(raw), kept))
-        print(f"  {name:26} fetched={len(raw):>4} kept={kept:>4}")
-        time.sleep(0.6)
+        report(name, len(raw), kept)
+        time.sleep(0.3)
 
     for page in range(1, ARBEITNOW_PAGES + 1):
-        data = fetch_json(f"https://www.arbeitnow.com/api/job-board-api?page={page}")
-        raw = (data or {}).get("data") or []
-        kept = sum(add(from_arbeitnow(x)) for x in raw if isinstance(x, dict))
-        stats.append(("arbeitnow", f"p{page}", len(raw), kept))
-        print(f"  arbeitnow/page{page:<2}         fetched={len(raw):>4} kept={kept:>4}")
-        time.sleep(0.6)
+        raw = ((fetch_json(f"https://www.arbeitnow.com/api/job-board-api?page={page}") or {}).get("data")) or []
+        report(f"arbeitnow/p{page}", len(raw), sum(add(from_arbeitnow(x)) for x in raw if isinstance(x, dict)))
+        time.sleep(0.3)
 
     for cat in REMOTIVE_CATEGORIES:
-        data = fetch_json(f"https://remotive.com/api/remote-jobs?category={cat}")
-        raw = (data or {}).get("jobs") or []
-        kept = sum(add(from_remotive(x)) for x in raw if isinstance(x, dict))
-        stats.append(("remotive", cat, len(raw), kept))
-        print(f"  remotive/{cat:17} fetched={len(raw):>4} kept={kept:>4}")
-        time.sleep(0.6)
+        raw = ((fetch_json(f"https://remotive.com/api/remote-jobs?category={cat}") or {}).get("jobs")) or []
+        report(f"remotive/{cat}", len(raw), sum(add(from_remotive(x)) for x in raw if isinstance(x, dict)))
+        time.sleep(1.0)  # remotive pide <= 2 req/min en el feed libre
 
-    for cat in WWR_CATEGORIES:
-        blob = fetch_bytes(f"https://weworkremotely.com/categories/{cat}.rss")
-        raw = []
-        if blob:
-            try:
-                raw = ET.fromstring(blob).findall(".//item")
-            except Exception as e:  # noqa: BLE001
-                print(f"    ! WWR parse {cat}: {e}", file=sys.stderr)
-        kept = sum(add(from_wwr(x)) for x in raw)
-        stats.append(("weworkremotely", cat, len(raw), kept))
-        print(f"  wwr/{cat:32} fetched={len(raw):>4} kept={kept:>4}")
-        time.sleep(0.6)
+    # ---------- RSS
+    for url in WWR_FEEDS:
+        items = fetch_xml(url)
+        report("wwr/" + url.rsplit("/", 1)[-1].replace(".rss", "")[:24], len(items), sum(add(from_wwr(x)) for x in items))
+        time.sleep(0.3)
+
+    nodesk = fetch_xml("https://nodesk.co/remote-jobs/index.xml")
+    report("nodesk", len(nodesk), sum(add(from_nodesk(x)) for x in nodesk))
 
     jobs.sort(key=lambda x: x.get("posted_at") or "", reverse=True)
     return jobs, stats
@@ -527,7 +677,7 @@ def write_outputs(jobs):
         json.dump(jobs, f, ensure_ascii=False, indent=1)
 
     keep = ["title", "company", "salary_min", "salary_max", "url", "source",
-            "tags", "posted_at", "region", "category", "level"]
+            "tags", "posted_at", "region", "category", "level", "ghost"]
     slim = [{k: j.get(k) for k in keep} for j in jobs]
     slim.sort(key=lambda x: x.get("posted_at") or "", reverse=True)
     feed = os.path.join(ROOT, "jobs.json")
@@ -542,7 +692,6 @@ def push_to_supabase(jobs):
     if not url or not key:
         print("\n[push] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — skipping.")
         return 0
-
     sent = 0
     for i in range(0, len(jobs), 100):
         chunk = [{k: v for k, v in j.items() if not k.startswith("_")} for j in jobs[i:i + 100]]
@@ -551,8 +700,7 @@ def push_to_supabase(jobs):
             data=json.dumps(chunk).encode(),
             method="POST",
             headers={
-                "apikey": key,
-                "Authorization": f"Bearer {key}",
+                "apikey": key, "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
                 "Prefer": "resolution=merge-duplicates,return=minimal",
             },
@@ -568,25 +716,28 @@ def push_to_supabase(jobs):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--push", action="store_true", help="upsert into Supabase after scraping")
+    ap.add_argument("--push", action="store_true")
     args = ap.parse_args()
 
     print(f"RadarJobs scraper — {datetime.now(timezone.utc):%Y-%m-%d %H:%M UTC}\n")
     jobs, stats = collect()
     full, feed, slim = write_outputs(jobs)
 
-    by_cat, by_level, by_region = {}, {}, {}
+    by_cat, by_level, by_region, by_src = {}, {}, {}, {}
     for j in jobs:
         by_cat[j["category"]] = by_cat.get(j["category"], 0) + 1
         by_level[j["level"]] = by_level.get(j["level"], 0) + 1
         by_region[j["region"]] = by_region.get(j["region"], 0) + 1
+        by_src[j["source"]] = by_src.get(j["source"], 0) + 1
 
-    print(f"\nTOTAL unique remote jobs: {len(jobs)}")
+    ghosts = sum(1 for j in jobs if j["ghost"])
+    print(f"\nTOTAL unique remote jobs: {len(jobs)}  (ghost >30d: {ghosts})")
     print(f"  con salario: {sum(1 for j in jobs if j['salary_min'])}")
     print(f"  por categoria: {dict(sorted(by_cat.items(), key=lambda x: -x[1]))}")
     print(f"  por nivel:     {by_level}")
     print(f"  por region:    {by_region}")
-    print(f"  full: {full}\n  feed: {feed}")
+    print(f"  por fuente:    {dict(sorted(by_src.items(), key=lambda x: -x[1]))}")
+    print(f"  feed: {feed} ({os.path.getsize(feed)/1024:.0f} KB)")
 
     if args.push:
         print("\nSubiendo a Supabase…")

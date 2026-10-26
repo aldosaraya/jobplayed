@@ -16,7 +16,7 @@
   };
 
   let JOBS = [];
-  const state = { q: "", region: "all", category: "", salary: 0, worktype: "", seniority: "", page: 1, sort: "" };
+  const state = { q: "", region: "all", category: "", salary: 0, worktype: "", seniority: "", page: 1, sort: "", hideGhost: true };
 
   const norm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const esc = (s) =>
@@ -108,7 +108,11 @@
       .map((t) => `<span class="px-2 py-0.5 rounded-DEFAULT bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-mono">${esc(t)}</span>`)
       .join("");
 
-    return `<article data-idx="${idx}" class="group relative bg-surface-container-low hover:bg-surface-container transition-all p-5 rounded-DEFAULT shadow-sm cursor-pointer border-l-2 border-primary">
+    const ghost = job.ghost
+      ? `<span title="Posted more than 30 days ago — the posting may be stale" class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-highest text-outline font-label-sm text-label-sm">👻 ghost</span>`
+      : "";
+
+    return `<article data-idx="${idx}" class="group relative bg-surface-container-low hover:bg-surface-container transition-all p-5 rounded-DEFAULT shadow-sm cursor-pointer border-l-2 ${job.ghost ? "border-outline-variant" : "border-primary"}">
   <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
     <div class="flex items-start gap-3.5 min-w-0">
       <div class="w-12 h-12 rounded-DEFAULT bg-surface-container flex items-center justify-center font-headline-sm text-headline-sm text-primary font-bold shadow-inner shrink-0">
@@ -121,6 +125,7 @@
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>${esc(job.source)}
           </span>
           <span class="font-mono-data text-body-sm text-outline">${esc(ago(job.posted_at))}</span>
+          ${ghost}
         </div>
         <h3 class="font-headline-md text-headline-sm text-on-surface group-hover:text-primary transition-colors font-bold truncate">${esc(job.title)}</h3>
         <p class="font-body-sm text-body-sm text-on-surface-variant">${esc(REGION_LABEL[job.region] || "Worldwide")} • Remote</p>
@@ -200,6 +205,7 @@
   }
 
   function matches(job, ignoreRegion) {
+    if (state.hideGhost && job.ghost) return false;
     if (state.q) {
       const hay = `${job.title} ${job.company} ${(job.tags || []).join(" ")}`.toLowerCase();
       if (!hay.includes(state.q)) return false;
@@ -373,6 +379,12 @@
     });
     document.getElementById("apply-filters-btn")?.addEventListener("click", () => {
       state.q = (input?.value || "").trim().toLowerCase();
+      state.page = 1;
+      render();
+    });
+
+    document.getElementById("ghost-toggle")?.addEventListener("change", (e) => {
+      state.hideGhost = e.target.checked;
       state.page = 1;
       render();
     });
