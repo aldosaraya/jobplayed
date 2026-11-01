@@ -26,13 +26,16 @@ jobs:
           python-version: "3.12"
 
       - name: Scrape public ATS feeds
-        run: python scraper/scrape.py
+        run: python scraper/scrape.py --push
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Commit refreshed feed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add jobs.json
+          git add jobs.json rss.xml
           if git diff --cached --quiet; then
             echo "No feed changes."
           else
