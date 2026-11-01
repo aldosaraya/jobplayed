@@ -2,8 +2,8 @@ name: Refresh job feed
 
 on:
   schedule:
-    # every 6 hours
-    - cron: "0 */6 * * *"
+    # every 2 hours (GitHub retrasa los crons 10-30 min; esto da ~2-2.5h real)
+    - cron: "0 */2 * * *"
   workflow_dispatch:
 
 permissions:

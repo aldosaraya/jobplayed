@@ -59,9 +59,17 @@ GREENHOUSE_BOARDS = [
     "reddit", "datadog", "vercel", "discord", "dropbox", "airtable",
     "wolt", "canonical", "payoneer", "intercom", "monzo", "wise",
     "upwork", "turing", "typeform", "elastic", "n26",
+    # US-heavy (2026-11, verificados vivos)
+    "figma", "databricks", "cloudflare", "okta", "robinhood", "lyft",
+    "airbnb", "pinterest", "flexport", "handshake", "duolingo",
+    "block", "twitch", "zscaler",
 ]
-ASHBY_BOARDS = ["openai", "vanta", "posthog", "ramp", "linear", "zapier"]
-LEVER_COMPANIES = ["spotify", "toptal"]
+ASHBY_BOARDS = ["openai", "vanta", "posthog", "ramp", "linear", "zapier",
+                "deel", "cursor", "sardine", "mercury"]
+LEVER_COMPANIES = ["spotify", "toptal", "palantir"]
+SMARTRECRUITERS_COMPANIES = ["wise", "deliveryhero"]
+RECRUITEE_COMPANIES = ["bunq"]
+NODESK_FEEDS = ["https://nodesk.co/remote-jobs/index.xml"]
 
 REMOTEJOBS_PAGES = 30          # 50 per page
 THEMUSE_PAGES = 15             # 20 per page, location=Remote
@@ -523,6 +531,49 @@ def from_nodesk(item):
     )
 
 
+def from_smartrecruiters(item, company):
+    loc = item.get("location") or {}
+    place = " ".join(str(loc.get(k)) for k in ("city", "region", "country") if loc.get(k))
+    return build(
+        item.get("name"), company,
+        f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}",
+        "smartrecruiters", infer_region(place, "remote" if loc.get("remote") else None),
+        [((item.get("department") or {}).get("label") or "")],
+        item.get("releasedDate"), item.get("shortDescription"),
+    )
+
+
+def from_recruitee(item, company):
+    depts = [d.get("name") for d in (item.get("departments") or []) if d.get("name")]
+    return build(
+        item.get("title"), company, item.get("careers_url") or item.get("url"),
+        "recruitee", infer_region(item.get("location") or ""),
+        depts, item.get("published_at"),
+        item.get("description") or item.get("short_description"),
+    )
+
+
+def from_usajobs(item):
+    d = item.get("MatchedObjectDescriptor") or {}
+    pay = d.get("PositionRemuneration") or []
+    hint = None
+    if pay:
+        lo = pay[0].get("RemunerationMinimumRate")
+        hi = pay[0].get("RemunerationMaximumRate")
+        try:
+            hint = (int(float(lo)), int(float(hi or lo))) if lo else None
+        except (TypeError, ValueError):
+            hint = None
+    disp = str(d.get("PositionLocationDisplay") or "")
+    region = infer_region("United States") if disp.lower().startswith("remote") else infer_region(disp or "United States")
+    return build(
+        d.get("PositionTitle"), d.get("OrganizationName"), d.get("PositionURI"),
+        "usajobs", region,
+        [], d.get("PublicationStartDate"),
+        (d.get("QualificationSummary") or ""), salary_hint=hint,
+    )
+
+
 def is_remote(item):
     blob = f"{item.get('_body','')} {' '.join(item.get('tags') or [])}".lower()
     return "remote" in blob or "anywhere" in blob or item.get("region") == "worldwide"
@@ -662,8 +713,52 @@ def collect():
         report("wwr/" + url.rsplit("/", 1)[-1].replace(".rss", "")[:24], len(items), sum(add(from_wwr(x)) for x in items))
         time.sleep(0.3)
 
-    nodesk = fetch_xml("https://nodesk.co/remote-jobs/index.xml")
-    report("nodesk", len(nodesk), sum(add(from_nodesk(x)) for x in nodesk))
+    for url in NODESK_FEEDS:
+        items = fetch_xml(url)
+        report("nodesk", len(items), sum(add(from_nodesk(x)) for x in items))
+
+    # ---------- SmartRecruiters / Recruitee
+    for comp in SMARTRECRUITERS_COMPANIES:
+        data = fetch_json(f"https://api.smartrecruiters.com/v1/companies/{comp}/postings?limit=100") or {}
+        raw = data.get("content") or []
+        kept = 0
+        for x in raw:
+            if not isinstance(x, dict):
+                continue
+            item = from_smartrecruiters(x, comp)
+            if (x.get("location") or {}).get("remote") or is_remote(item):
+                kept += add(item)
+        report(f"smartrecruiters/{comp}", len(raw), kept)
+        time.sleep(0.3)
+
+    for comp in RECRUITEE_COMPANIES:
+        data = fetch_json(f"https://{comp}.recruitee.com/api/offers/") or {}
+        raw = data.get("offers") or []
+        kept = sum(add(from_recruitee(x, comp)) for x in raw if isinstance(x, dict))
+        report(f"recruitee/{comp}", len(raw), kept)
+
+    # ---------- USAJOBS (empleos de EE.UU., requiere clave gratuita)
+    key = os.environ.get("USAJOBS_API_KEY")
+    if key:
+        data = None
+        try:
+            req = urllib.request.Request(
+                "https://data.usajobs.gov/api/search?Keyword=remote&ResultsPerPage=100",
+                headers={
+                    "User-Agent": os.environ.get("USAJOBS_USER_EMAIL", "radarjobs@example.com"),
+                    "Authorization-Key": key,
+                    "Accept": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=30) as r:
+                data = json.load(r)
+        except Exception as e:  # noqa: BLE001
+            data = None
+            print(f"    ! usajobs -> {type(e).__name__}: {e}", file=sys.stderr)
+        items = ((data or {}).get("SearchResult") or {}).get("SearchResultItems") or []
+        report("usajobs", len(items), sum(add(from_usajobs(x)) for x in items if isinstance(x, dict)))
+    else:
+        report("usajobs (sin clave)", 0, 0)
 
     jobs.sort(key=lambda x: x.get("posted_at") or "", reverse=True)
     return jobs, stats
