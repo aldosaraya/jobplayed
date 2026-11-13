@@ -71,6 +71,14 @@ SMARTRECRUITERS_COMPANIES = ["wise", "deliveryhero"]
 RECRUITEE_COMPANIES = ["bunq"]
 NODESK_FEEDS = ["https://nodesk.co/remote-jobs/index.xml"]
 
+# Public RSS job feeds — no key, no HTML scraping. Probed live 2026-11.
+RSS_JOB_FEEDS = [
+    ("jobspresso", "https://jobspresso.co/feed/?post_type=job_listing"),
+    ("djangojobs", "https://djangojobs.net/jobs/feed/"),
+    ("pythonjobs", "https://www.python.org/jobs/feed/rss/"),
+]
+
+
 REMOTEJOBS_PAGES = 30          # 50 per page
 THEMUSE_PAGES = 15             # 20 per page, location=Remote
 HIMALAYAS_PAGES = 15           # 20 per page via offset
@@ -147,6 +155,46 @@ def fetch_xml(url):
 
 
 # ------------------------------------------------------------------ helpers
+def fetch_feed_items(url):
+    """RSS/Atom items as plain dicts.
+
+    Regex over <item> blocks on purpose: these feeds ship CDATA bodies and
+    namespaced tags (job:company, job:location) that ElementTree either drops
+    or returns as '{ns}tag'. We only need a handful of fields, so a tolerant
+    parse beats a namespace-aware one.
+    """
+    blob = _request(url)
+    if not blob:
+        return []
+    txt = blob.decode("utf-8", "ignore")
+
+    def pick(block, *names):
+        for name in names:
+            m = re.search(r"<%s>(.*?)</%s>" % (name, name), block, re.S)
+            if not m:
+                continue
+            value = m.group(1).strip()
+            value = re.sub(r"^<!\[CDATA\[|\]\]>$", "", value).strip()
+            if value:
+                return value
+        return ""
+
+    out = []
+    for block in re.findall(r"<item>(.*?)</item>", txt, re.S):
+        out.append({
+            "title": pick(block, "title"),
+            "link": pick(block, "link"),
+            "category": pick(block, "category"),
+            "pub": pick(block, "pubDate", "published", "updated"),
+            "description": clean_text(pick(block, "description", "content:encoded"), 1500),
+            "company": pick(block, "job:company"),
+            "location": pick(block, "job:location"),
+            "work_mode": pick(block, "job:work_mode"),
+            "apply_url": pick(block, "job:apply_url"),
+        })
+    return out
+
+
 def clean_text(raw, limit=4000):
     if not raw:
         return ""
@@ -307,6 +355,14 @@ def build(title, company, url, source, region, tags=None, posted=None, body="",
         smin, smax = salary_hint
     if not smin:
         smin, smax = extract_salary(body)
+
+    # An "annual" range under $24k is almost always an hourly, daily or monthly
+    # figure the source published (a $1,500–$2,500 range for a physician is a
+    # day rate). Shipping it as annual poisons the salary filter and the digest
+    # floor, so drop the pair instead of guessing a multiplier.
+    hi = re.sub(r"[^0-9]", "", str(smax or smin or ""))
+    if hi and int(hi) < 24000:
+        smin = smax = None
 
     if isinstance(tags, str):
         tags = [t.strip() for t in tags.split(",")]
@@ -574,6 +630,127 @@ def from_usajobs(item):
     )
 
 
+LOC_WORDS = {"remote", "worldwide", "anywhere", "usa", "us", "united", "states", "canada",
+             "europe", "eu", "uk", "latam", "germany", "global", "americas", "emea",
+             "apac", "africa", "asia", "austria", "spain", "france"}
+
+NAME_STOP = {"is", "was", "are", "has", "have", "provides", "helps", "builds", "born",
+             "the", "a", "an", "we", "our", "at", "in", "for", "and", "with", "of",
+             "to", "that", "this", "it", "on", "by", "as", "from", "its", "role",
+             "position", "job", "team", "company"}
+
+
+NAME_VERBS = r"(?:is|was|are|has|have|builds|provides|helps|enables|offers|makes|powers|born|now|lets)"
+_AT_RE = re.compile(r"(?:^|[.!?]\s+|^)At\s+([A-Z][\w&.'\-]*(?:\s+[A-Z][\w&.'\-]*){0,2})")
+_VERB_RE = re.compile(r"(?:^|[.!?]\s+)(?:The\s+)?([A-Z][\w&.'\-]*(?:\s+[A-Z][\w&.'\-]*){0,2}),?\s+" + NAME_VERBS + r"\b")
+
+
+def name_from_description(desc):
+    """Most boards open the body with the employer: 'Coinbase is…', 'At Mercury, we…'."""
+    text = (desc or "").strip()[:400]
+    for pattern in (_AT_RE, _VERB_RE):
+        for m in pattern.finditer(text):
+            words = []
+            for word in m.group(1).rstrip(",").split():
+                if word.lower() in NAME_STOP:
+                    break
+                words.append(word)
+                if len(words) == 3:
+                    break
+            name = " ".join(words).strip()
+            if name and len(name) > 2:
+                return name
+    return ""
+
+
+def usable_company(name, title):
+    """Reject a candidate that is the role title echoed back."""
+    key = re.sub(r"[^a-z0-9]", "", (name or "").lower())
+    title_key = re.sub(r"[^a-z0-9]", "", (title or "").lower())
+    if not key or not title_key:
+        return ""
+    if key in title_key:
+        return ""
+    title_words = {w for w in re.split(r"[^a-z0-9]+", (title or "").lower()) if len(w) > 2}
+    name_words = [w for w in re.split(r"[^a-z0-9]+", (name or "").lower()) if len(w) > 2]
+    if len(name_words) > 1 and name_words[0] not in title_words:
+        if sum(1 for w in name_words if w in title_words) >= 1:
+            return ""  # "Mercury Sales Development" for "Sales Development Representative"
+    return name
+
+
+def prettify_company(raw):
+    s = html.unescape(raw or "").strip()
+    if not s:
+        return ""
+    return s.replace("-", " ").title() if (s.islower() or "-" in s) else s
+
+
+def company_from_slug(url):
+    """Jobspresso puts the employer in the slug: /job/<company>-<location>-<role>/."""
+    m = re.search(r"/job/([a-z0-9-]+)/", url or "")
+    if not m:
+        return ""
+    keep = []
+    for word in m.group(1).split("-"):
+        if word in LOC_WORDS:
+            break
+        keep.append(word)
+    name = " ".join(keep[:6]).strip()
+    return name.title() if name else ""
+
+
+def from_jobspresso(item):
+    desc = item.get("description") or ""
+    title = html.unescape(item.get("title") or "")
+    company = (
+        usable_company(company_from_slug(item.get("link")), title)
+        or usable_company(name_from_description(desc), title)
+        or "Jobspresso"
+    )
+    return build(
+        title, company, item.get("link"), "jobspresso",
+        infer_region(title + " " + desc + " remote"),
+        posted=item.get("pub"), body=desc, category_hint=item.get("category"),
+    )
+
+
+def from_djangojobs(item):
+    raw_title = html.unescape(item.get("title") or "")
+    company = prettify_company(item.get("company"))
+    title = raw_title
+    if " at " in raw_title.lower()[-60:]:
+        title, _, tail = raw_title.rpartition(" at ")
+        company = company or prettify_company(tail)
+    desc = item.get("description") or ""
+    company = usable_company(company, title) or usable_company(name_from_description(desc), title) or "DjangoJobs"
+    # a few items ship the two fields swapped: the role slug lands in job:company
+    if categorize(title) == "other" and categorize(company) != "other" and company != "DjangoJobs":
+        title, company = company, title
+    where = " ".join(p for p in (item.get("location"), item.get("work_mode")) if p)
+    return build(
+        title.strip(), company, item.get("apply_url") or item.get("link"),
+        "djangojobs", infer_region(where + " " + desc + " remote"),
+        tags=[t for t in (item.get("work_mode"), item.get("location")) if t],
+        posted=item.get("pub"), body=desc, category_hint=item.get("category"),
+    )
+
+
+def from_pythonjobs(item):
+    raw_title = html.unescape(item.get("title") or "")
+    role, company = raw_title, "Python.org Jobs"
+    if "," in raw_title:
+        role, _, tail = raw_title.rpartition(",")
+        if tail.strip():
+            company = tail.strip()
+    desc = item.get("description") or ""
+    return build(
+        role.strip(), company, item.get("link"), "pythonjobs",
+        infer_region(desc + " remote"), tags=["python"],
+        posted=item.get("pub"), body=desc,
+    )
+
+
 def is_remote(item):
     blob = f"{item.get('_body','')} {' '.join(item.get('tags') or [])}".lower()
     return "remote" in blob or "anywhere" in blob or item.get("region") == "worldwide"
@@ -716,6 +893,14 @@ def collect():
     for url in NODESK_FEEDS:
         items = fetch_xml(url)
         report("nodesk", len(items), sum(add(from_nodesk(x)) for x in items))
+
+    # ---------- public RSS job feeds (Jobspresso, DjangoJobs, Python.org)
+    for name, url in RSS_JOB_FEEDS:
+        items = fetch_feed_items(url)
+        fn = {"jobspresso": from_jobspresso, "djangojobs": from_djangojobs,
+              "pythonjobs": from_pythonjobs}[name]
+        report(name, len(items), sum(add(fn(x)) for x in items))
+        time.sleep(0.4)
 
     # ---------- SmartRecruiters / Recruitee
     for comp in SMARTRECRUITERS_COMPANIES:

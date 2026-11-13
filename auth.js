@@ -45,69 +45,63 @@ export async function signOut() {
   location.href = "index.html";
 }
 
-/** Subscription state for the logged-in user: { profile, subscription, isActive }. */
-export async function getSubscriptionState() {
+/** Everything the account page needs: { session, profile, subscription, isActive }. */
+export async function getAccount() {
   const session = await getSession();
-  if (!session) return { profile: null, subscription: null, isActive: false };
+  if (!session) return { session: null, profile: null, subscription: null, isActive: false };
 
   const uid = session.user.id;
   const [profileRes, subRes] = await Promise.all([
-    supabase.from("profiles").select("id,email,role").eq("id", uid).maybeSingle(),
-    supabase.from("subscriptions").select("status,plan,period_ends").eq("id", uid).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("id,email,role,job_role,region,salary_min,digest_opt_out")
+      .eq("id", uid)
+      .maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("status,plan,period_ends,last_digest_at")
+      .eq("id", uid)
+      .maybeSingle(),
   ]);
 
   return {
+    session,
     profile: profileRes.data ?? null,
     subscription: subRes.data ?? null,
     isActive: subRes.data?.status === "active",
   };
 }
 
+/** Persists the weekly-alert filters the digest function reads. */
+export async function saveAlerts({ job_role, region, salary_min, digest_opt_out }) {
+  const session = await getSession();
+  if (!session) throw new Error("Not signed in");
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      job_role,
+      region,
+      salary_min,
+      digest_opt_out,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", session.user.id)
+    .select("job_role,region,salary_min,digest_opt_out")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
 /** Redirects to login when there is no session. Use on private pages. */
 export async function requireAuth(redirectTo = "login.html") {
   const session = await getSession();
   if (!session) {
-    const next = encodeURIComponent(location.pathname.split("/").pop() || "jobs.html");
+    const next = encodeURIComponent(location.pathname.split("/").pop() || "account.html");
     location.href = `${redirectTo}?next=${next}`;
     return null;
   }
   return session;
 }
 
-/**
- * Swaps the nav "Log In / Sign Up" links for the user's email + "Sign out"
- * when a session exists. No-ops on pages without [data-auth-link].
- */
-export async function mountNavState() {
-  const session = await getSession();
-  const authLinks = document.querySelectorAll("[data-auth-link]");
-  if (!authLinks.length) return;
-
-  if (!session) {
-    authLinks.forEach((el) => {
-      el.textContent = el.dataset.authLink === "login" ? "Log In" : "Sign Up";
-      el.href = el.dataset.authLink === "login" ? "login.html" : "signup.html";
-    });
-    return;
-  }
-
-  const email = session.user.email ?? "account";
-  authLinks.forEach((el, i) => {
-    if (i === 0) {
-      el.textContent = email;
-      el.href = "jobs.html";
-      el.title = "Signed in";
-    } else {
-      el.textContent = "Sign out";
-      el.href = "#";
-      el.addEventListener("click", (e) => {
-        e.preventDefault();
-        signOut();
-      });
-    }
-  });
-}
-
-// Auto-mount on any page that imports this module.
-if (document.readyState !== "loading") mountNavState();
-else document.addEventListener("DOMContentLoaded", mountNavState);

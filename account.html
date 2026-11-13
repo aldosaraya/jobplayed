@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Your account | RadarJobs</title>
+<meta name="robots" content="noindex"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary":"#d0bcff","tertiary-container":"#b175ec","on-primary-container":"#400071","error":"#ffb4ab","on-surface-variant":"#cfc2d6","secondary-container":"#571bc1","surface-container-highest":"#343439","surface-container-lowest":"#0d0e12","surface":"#121317","surface-variant":"#343439","on-background":"#e3e2e8","on-secondary-fixed-variant":"#5516be","primary-fixed":"#f0dbff","primary-container":"#b76dff","background":"#121317","on-tertiary-fixed-variant":"#62259b","on-primary-fixed-variant":"#6900b3","surface-container-high":"#292a2e","on-secondary":"#3c0091","inverse-surface":"#e3e2e8","on-error":"#690005","tertiary":"#ddb8ff","surface-dim":"#121317","on-primary":"#490080","tertiary-fixed-dim":"#ddb8ff","secondary-fixed-dim":"#d0bcff","primary":"#ddb7ff","on-secondary-container":"#c4abff","inverse-primary":"#842bd2","error-container":"#93000a","primary-fixed-dim":"#ddb7ff","on-secondary-fixed":"#23005c","on-error-container":"#ffdad6","outline-variant":"#4d4354","secondary-fixed":"#e9ddff","surface-bright":"#38393e","surface-container":"#1f1f24","inverse-on-surface":"#2f3035","outline":"#988d9f","on-tertiary-container":"#400071","on-tertiary":"#490081","tertiary-fixed":"#f0dbff","on-tertiary-fixed":"#2c0051","on-primary-fixed":"#2c0051","on-surface":"#e3e2e8","surface-tint":"#ddb7ff","surface-container-low":"#1a1b20"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xs":"0.25rem","space-sm":"0.5rem","gutter-desktop":"1.5rem","margin-desktop":"2rem","margin":"1rem","space-lg":"1.5rem","space-md":"1rem","space-xl":"2.5rem","gutter":"1rem"},"fontFamily":{"headline-lg":["IBM Plex Sans","system-ui","sans-serif"],"body-sm":["IBM Plex Sans","system-ui","sans-serif"],"label-sm":["IBM Plex Sans","system-ui","sans-serif"],"headline-sm":["IBM Plex Sans","system-ui","sans-serif"],"body-lg":["IBM Plex Sans","system-ui","sans-serif"],"body-md":["IBM Plex Sans","system-ui","sans-serif"],"display-lg-mobile":["IBM Plex Sans","system-ui","sans-serif"],"headline-md":["IBM Plex Sans","system-ui","sans-serif"],"label-md":["IBM Plex Sans","system-ui","sans-serif"],"display-lg":["IBM Plex Sans","system-ui","sans-serif"],"mono-data":["IBM Plex Mono","ui-monospace","monospace"]},"fontSize":{"headline-lg":["28px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"400"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0em","fontWeight":"400"}],"display-lg-mobile":["32px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"500"}],"display-lg":["48px",{"lineHeight":"54px","letterSpacing":"-0.025em","fontWeight":"600"}],"mono-data":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"500"}]}}}};</script>
+<link rel="stylesheet" href="site.css"/>
+<script src="boot.js"></script>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary selection:text-on-primary">
+
+<header class="page-head">
+  <div class="bar">
+    <a class="brand" href="index.html">RadarJobs</a>
+    <nav class="top-nav" aria-label="Main">
+      <a href="jobs.html">Explore jobs</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="account.html" aria-current="page">Alerts</a>
+    </nav>
+    <div class="flex items-center gap-2" id="nav-auth"></div>
+  </div>
+</header>
+
+<main class="w-full max-w-7xl mx-auto px-gutter-desktop py-10 min-h-[70vh]">
+  <div class="mb-8">
+    <h1 class="font-headline-lg text-display-lg text-on-surface tracking-tight">Your account</h1>
+    <p class="font-body-lg text-body-md text-on-surface-variant mt-2">
+      Weekly alert filters, plan status and the address your digest is sent to.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <nav class="lg:col-span-3 flex flex-col gap-1 p-2 rounded-xl bg-surface-container-low" aria-label="Account sections">
+      <a href="#overview" data-tab="overview" class="acct-tab">Overview</a>
+      <a href="#alerts" data-tab="alerts" class="acct-tab">My alerts</a>
+      <a href="#subscription" data-tab="subscription" class="acct-tab">Subscription</a>
+      <a href="#profile" data-tab="profile" class="acct-tab">Profile &amp; security</a>
+    </nav>
+
+    <div class="lg:col-span-9 flex flex-col gap-6">
+
+      <section id="panel-overview" data-panel="overview" class="acct-panel">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-5 rounded-xl bg-surface-container-low">
+            <p class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Plan</p>
+            <p id="ov-plan" class="font-headline-md text-headline-md text-on-surface mt-1">—</p>
+            <p id="ov-plan-note" class="font-body-sm text-body-sm text-on-surface-variant mt-1"></p>
+          </div>
+          <div class="p-5 rounded-xl bg-surface-container-low">
+            <p class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Next digest</p>
+            <p id="ov-next" class="font-headline-md text-headline-md text-on-surface mt-1">—</p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Mondays, 08:00 UTC</p>
+          </div>
+          <div class="p-5 rounded-xl bg-surface-container-low">
+            <p class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Matches now</p>
+            <p id="ov-matches" class="font-headline-md text-headline-md text-primary mt-1">—</p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Openings your filters select today</p>
+          </div>
+        </div>
+
+        <div class="p-6 rounded-xl bg-surface-container-low">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 class="font-headline-sm text-headline-md text-on-surface">Your filters</h2>
+            <a href="#alerts" data-tab="alerts" class="font-label-md text-label-md text-primary hover:underline">Edit filters</a>
+          </div>
+          <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Role</dt><dd class="font-body-md text-body-md text-on-surface mt-1" data-ov="role">—</dd></div>
+            <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Region</dt><dd class="font-body-md text-body-md text-on-surface mt-1" data-ov="region">—</dd></div>
+            <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Salary floor</dt><dd class="font-body-md text-body-md text-on-surface mt-1 font-mono-data" data-ov="salary">—</dd></div>
+          </dl>
+        </div>
+
+        <div class="p-6 rounded-xl bg-surface-container-low">
+          <h2 class="font-headline-sm text-headline-md text-on-surface mb-3">Next email preview</h2>
+          <div id="ov-preview" class="flex flex-col gap-2"></div>
+        </div>
+      </section>
+
+      <section id="panel-alerts" data-panel="alerts" class="acct-panel hidden">
+        <form id="alerts-form" class="p-6 rounded-xl bg-surface-container-low flex flex-col gap-5" novalidate>
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="font-headline-sm text-headline-md text-on-surface">Weekly alert filters</h2>
+              <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                These are the exact filters the Monday digest uses to pick your openings.
+              </p>
+            </div>
+            <span id="alerts-toast" class="toast" hidden>
+              <span class="material-symbols-outlined" style="font-size:16px">check_circle</span><span>Saved</span>
+            </span>
+          </div>
+
+          <div class="field">
+            <label for="alerts-role">Primary target role</label>
+            <select id="alerts-role">
+              <option value="tech">Software engineering &amp; architecture</option>
+              <option value="data">Data science, analytics &amp; data engineering</option>
+              <option value="design">Product design, UI/UX &amp; design systems</option>
+              <option value="product">Product management &amp; tech operations</option>
+              <option value="devops">DevOps, cloud infrastructure &amp; security</option>
+              <option value="support">Customer support &amp; success</option>
+              <option value="marketing">Marketing &amp; content</option>
+              <option value="sales">Sales &amp; business development</option>
+              <option value="admin">Admin, ops &amp; people</option>
+              <option value="writing">Writing &amp; editing</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="alerts-region">Accepted region</label>
+            <select id="alerts-region">
+              <option value="worldwide">Worldwide — no time-zone restriction</option>
+              <option value="latam">Latin America only</option>
+              <option value="america">Americas — overlapping hours</option>
+              <option value="eu">Europe / UK</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-2 p-3 rounded-lg bg-surface-container">
+            <div class="flex items-center justify-between">
+              <label class="font-label-md text-label-md text-on-surface-variant" for="alerts-salary">Minimum annual salary</label>
+              <output id="alerts-salary-out" for="alerts-salary" class="font-mono-data text-body-md text-primary font-semibold">$70,000</output>
+            </div>
+            <input id="alerts-salary" type="range" min="30000" max="180000" step="5000" value="70000" class="w-full accent-primary"/>
+            <p class="font-body-sm text-body-sm text-outline">Openings without a published range are still included.</p>
+          </div>
+
+          <label class="flex items-center gap-3 p-3 rounded-lg bg-surface-container cursor-pointer">
+            <input id="alerts-digest" type="checkbox" class="w-4 h-4 accent-primary"/>
+            <span class="font-body-md text-body-md text-on-surface">Send me the weekly digest email</span>
+          </label>
+
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button class="btn btn-primary" type="submit" id="alerts-save">Save changes</button>
+            <span id="alerts-error" class="font-body-sm text-body-sm" style="color:#ffb4ab" hidden></span>
+          </div>
+        </form>
+
+        <div class="p-6 rounded-xl bg-surface-container-low">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 class="font-headline-sm text-headline-md text-on-surface">Live preview with current filters</h2>
+            <span id="alerts-count" class="font-mono-data text-body-sm text-secondary">—</span>
+          </div>
+          <div id="alerts-preview" class="flex flex-col gap-2"></div>
+        </div>
+      </section>
+
+      <section id="panel-subscription" data-panel="subscription" class="acct-panel hidden">
+        <div class="p-6 rounded-xl bg-surface-container-low">
+          <h2 class="font-headline-sm text-headline-md text-on-surface mb-4">Radar VIP</h2>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Status</dt><dd id="sub-status" class="font-body-md text-body-md text-on-surface mt-1">—</dd></div>
+            <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Billing period</dt><dd id="sub-plan" class="font-body-md text-body-md text-on-surface mt-1">—</dd></div>
+            <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Renews / ends</dt><dd id="sub-period" class="font-body-md text-body-md text-on-surface mt-1">—</dd></div>
+            <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Last digest sent</dt><dd id="sub-digest" class="font-body-md text-body-md text-on-surface mt-1">—</dd></div>
+          </dl>
+          <div class="mt-6 pt-5 border-t border-outline-variant/30 flex flex-wrap items-center gap-3">
+            <a class="btn btn-primary" href="pricing.html" data-guest-only>Activate for $4.99/mo</a>
+            <a class="btn btn-ghost" href="pricing.html" data-member-only>Manage billing</a>
+            <span class="font-body-sm text-body-sm text-outline">14-day money-back guarantee. Cancel from any email.</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-profile" data-panel="profile" class="acct-panel hidden">
+        <div class="p-6 rounded-xl bg-surface-container-low">
+          <h2 class="font-headline-sm text-headline-md text-on-surface mb-4">Sign-in email</h2>
+          <p class="font-body-md text-body-md text-on-surface font-mono-data" data-user-email>—</p>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mt-2">The digest is delivered to this address.</p>
+          <div class="mt-6 pt-5 border-t border-outline-variant/30 flex flex-wrap gap-3">
+            <button class="btn btn-ghost" type="button" id="signout-btn">Sign out</button>
+            <a class="btn btn-ghost" href="privacy.html">Privacy policy</a>
+            <a class="btn btn-ghost" href="legal.html">Terms</a>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer class="w-full border-t border-outline-variant/30 py-8 mt-10">
+  <div class="w-full max-w-7xl mx-auto px-gutter-desktop flex flex-wrap items-center justify-between gap-4">
+    <span class="font-body-sm text-body-sm text-on-surface-variant">RadarJobs © 2026</span>
+    <div class="flex flex-wrap items-center gap-5">
+      <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" href="jobs.html">Jobs</a>
+      <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" href="pricing.html">Pricing</a>
+      <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" href="privacy.html">Privacy</a>
+      <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" href="legal.html">Legal</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+import { requireAuth, getAccount, saveAlerts, signOut } from "./auth.js";
+import { pickJobs, money, ago, esc } from "./app.js";
+
+const $ = (s) => document.querySelector(s);
+const ROLE_LABEL = {
+  tech: "Software engineering", data: "Data & analytics", design: "Product design",
+  product: "Product management", devops: "DevOps & cloud", support: "Customer support",
+  marketing: "Marketing", sales: "Sales", admin: "Admin & ops", writing: "Writing",
+};
+const REGION_LABEL = { worldwide: "Worldwide", latam: "LatAm only", america: "Americas", eu: "Europe" };
+
+if (await requireAuth()) init();
+
+async function init() {
+  const acc = await getAccount();
+  const p = acc.profile || {};
+  const sub = acc.subscription || {};
+
+  /* ---------- tabs ---------- */
+  const tabs = Array.from(document.querySelectorAll("[data-tab]"));
+  const panels = Array.from(document.querySelectorAll("[data-panel]"));
+  function showTab(name) {
+    if (!panels.some((el) => el.dataset.panel === name)) name = "overview";
+    panels.forEach((el) => el.classList.toggle("hidden", el.dataset.panel !== name));
+    tabs.forEach((el) => el.classList.toggle("active", el.dataset.tab === name));
+  }
+  tabs.forEach((el) => el.addEventListener("click", (e) => {
+    e.preventDefault();
+    history.replaceState(null, "", "#" + el.dataset.tab);
+    showTab(el.dataset.tab);
+  }));
+  showTab((location.hash || "#overview").slice(1));
+
+  /* ---------- form prefill ---------- */
+  const role = $("#alerts-role"), region = $("#alerts-region"), salary = $("#alerts-salary");
+  const digest = $("#alerts-digest"), salaryOut = $("#alerts-salary-out");
+  role.value = p.job_role || "tech";
+  region.value = p.region || "worldwide";
+  salary.value = String(p.salary_min ?? 70000);
+  digest.checked = p.digest_opt_out !== true;
+  const paintSalary = () => { salaryOut.textContent = "$" + Number(salary.value).toLocaleString("en-US"); };
+  paintSalary();
+
+  /* ---------- overview + subscription ---------- */
+  const statusText = { active: "Active", pending: "Not active", past_due: "Payment failed", canceled: "Canceled" };
+  $("#ov-plan").textContent = acc.isActive ? "Radar VIP" : "Free";
+  $("#ov-plan-note").textContent = acc.isActive
+    ? `${String(sub.plan || "monthly")} billing · ${statusText[sub.status] || sub.status}`
+    : "No paid plan yet — your filters still save.";
+  const next = new Date();
+  next.setUTCDate(next.getUTCDate() + ((8 - next.getUTCDay()) % 7 || 7));
+  next.setUTCHours(8, 0, 0, 0);
+  $("#ov-next").textContent = next.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+  $("#sub-status").textContent = statusText[sub.status] || "No subscription";
+  $("#sub-plan").textContent = sub.plan ? String(sub.plan) : "—";
+  $("#sub-period").textContent = sub.period_ends
+    ? new Date(sub.period_ends).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+    : "—";
+  $("#sub-digest").textContent = sub.last_digest_at
+    ? new Date(sub.last_digest_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : "Not sent yet";
+
+  const fillOverview = () => {
+    document.querySelector('[data-ov="role"]').textContent = ROLE_LABEL[role.value] || role.value;
+    document.querySelector('[data-ov="region"]').textContent = REGION_LABEL[region.value] || region.value;
+    document.querySelector('[data-ov="salary"]').textContent = "$" + Number(salary.value).toLocaleString("en-US") + " / yr";
+  };
+  fillOverview();
+
+  /* ---------- live preview (same RPC the digest email uses) ---------- */
+  const row = (j) => {
+    const sal = money(j.salary_min, j.salary_max);
+    return `<a class="p-4 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors block" href="${esc(j.url)}" target="_blank" rel="noopener">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="font-headline-sm text-body-md text-on-surface font-semibold">${esc(j.title)}</span>
+        <span class="font-mono-data text-body-sm text-primary">${sal ? esc(sal) : "Not disclosed"}</span>
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+        ${esc(j.company)} · ${esc(REGION_LABEL[j.region] || "Worldwide")}${j.posted_at ? " · " + esc(ago(j.posted_at)) : ""}
+      </p>
+    </a>`;
+  };
+
+  let seq = 0;
+  async function preview(target, countEl) {
+    const my = ++seq;
+    target.innerHTML = '<div class="skeleton" style="height:74px"></div><div class="skeleton" style="height:74px"></div>';
+    try {
+      const jobs = await pickJobs({ role: role.value, region: region.value, salary: Number(salary.value) || 0, limit: 25 });
+      if (my !== seq) return;
+      if (countEl) countEl.textContent = jobs.length ? `${jobs.length}${jobs.length >= 25 ? "+" : ""} matches` : "0 matches";
+      target.innerHTML = jobs.length
+        ? jobs.slice(0, 4).map(row).join("")
+        : '<p class="font-body-sm text-body-sm text-on-surface-variant">No openings match these filters yet. Lower the salary floor or widen the region.</p>';
+      $("#ov-matches").textContent = jobs.length ? String(jobs.length) + (jobs.length >= 25 ? "+" : "") : "0";
+    } catch {
+      if (my === seq) target.innerHTML = '<p class="font-body-sm text-body-sm text-on-surface-variant">Preview unavailable right now.</p>';
+    }
+  }
+
+  preview($("#alerts-preview"), $("#alerts-count"));
+  preview($("#ov-preview"), null);
+
+  let t;
+  [role, region, salary].forEach((el) => el.addEventListener("input", () => {
+    if (el === salary) paintSalary();
+    fillOverview();
+    clearTimeout(t);
+    t = setTimeout(() => preview($("#alerts-preview"), $("#alerts-count")), 300);
+  }));
+
+  /* ---------- save ---------- */
+  $("#alerts-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("#alerts-save");
+    const toast = $("#alerts-toast");
+    const errBox = $("#alerts-error");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    errBox.hidden = true;
+    try {
+      await saveAlerts({
+        job_role: role.value,
+        region: region.value,
+        salary_min: Number(salary.value) || 0,
+        digest_opt_out: !digest.checked,
+      });
+      toast.hidden = false;
+      setTimeout(() => { toast.hidden = true; }, 2600);
+    } catch (err) {
+      errBox.textContent = err?.message || "Could not save your filters.";
+      errBox.hidden = false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save changes";
+    }
+  });
+
+  $("#signout-btn").addEventListener("click", () => signOut());
+}
+</script>
+</body>
+</html>

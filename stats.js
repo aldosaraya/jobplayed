@@ -6,7 +6,7 @@
   "use strict";
 
   var SUPA_URL = "https://juijmkcfbjthohjpgflr.supabase.co";
-  var SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1aWpta2NmYmp0aG9oanBnZmxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1NzQ3MDEsImV4cCI6MjEwODE1MDcwMX0.nXQcCeRno_SXhQziizZ4sM4vQZxLKqgO6uv1tWcmAAU"; // replaced at build time from auth.js
+  var SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1aWpta2NmYmp0aG9oanBnZmxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1NzQ3MDEsImV4cCI6MjEwODE1MDcwMX0.nXQcCeRno_SXhQziizZ4sM4vQZxLKqgO6uv1tWcmAAU"; // anon key: public by design, RLS protects the data
 
   function setAll(key, value) {
     document.querySelectorAll('[data-stat="' + key + '"]').forEach(function (el) {

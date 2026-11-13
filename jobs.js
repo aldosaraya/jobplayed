@@ -1,11 +1,14 @@
 /* RadarJobs — job feed renderer, filters, sort and pagination.
  * Data source: Supabase REST (live), with static /jobs.json as fallback.
  */
+import { initZoom } from "./app.js";
+
 (function () {
   "use strict";
 
   const container = document.getElementById("jobs-container");
   if (!container) return;
+  container.setAttribute("data-zoom-group", "");
 
   const PAGE_SIZE = 10;
   const REGION_LABEL = {
@@ -13,6 +16,30 @@
     latam: "Latam Only",
     america: "America Only",
     eu: "EU Only",
+  };
+
+  // Which public endpoint each row came from — shown in the inspector.
+  const SOURCE_LABEL = {
+    greenhouse: "Greenhouse (public API)",
+    ashby: "Ashby (public API)",
+    lever: "Lever (public API)",
+    smartrecruiters: "SmartRecruiters",
+    recruitee: "Recruitee",
+    remotejobs: "remotejobs.org",
+    themuse: "The Muse",
+    himalayas: "Himalayas",
+    jobicy: "Jobicy",
+    remoteok: "RemoteOK",
+    arbeitnow: "Arbeitnow",
+    remotive: "Remotive",
+    workingnomads: "Working Nomads",
+    "4dayweek": "4dayweek.io",
+    weworkremotely: "We Work Remotely",
+    nodesk: "NoDesk",
+    jobspresso: "Jobspresso",
+    djangojobs: "DjangoJobs",
+    pythonjobs: "Python.org Jobs",
+    usajobs: "USAJOBS",
   };
 
   let JOBS = [];
@@ -73,7 +100,7 @@
     const h = Math.floor(mins / 60);
     if (h < 24) return h + " h ago";
     const days = Math.floor(h / 24);
-    return days + (days === 1 ? " d ago" : " d ago");
+    return days + " d ago";
   }
 
   function salaryOf(job) {
@@ -112,7 +139,7 @@
       ? `<span title="Posted more than 30 days ago — the posting may be stale" class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-highest text-outline font-label-sm text-label-sm">👻 ghost</span>`
       : "";
 
-    return `<article data-idx="${idx}" class="group relative bg-surface-container-low hover:bg-surface-container transition-all p-5 rounded-DEFAULT shadow-sm cursor-pointer border-l-2 ${job.ghost ? "border-outline-variant" : "border-primary"}">
+    return `<article data-idx="${idx}" data-zoom class="group relative bg-surface-container-low hover:bg-surface-container transition-all p-5 rounded-DEFAULT shadow-sm cursor-pointer border-l-2 ${job.ghost ? "border-outline-variant" : "border-primary"}">
   <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
     <div class="flex items-start gap-3.5 min-w-0">
       <div class="w-12 h-12 rounded-DEFAULT bg-surface-container flex items-center justify-center font-headline-sm text-headline-sm text-primary font-bold shadow-inner shrink-0">
@@ -139,7 +166,6 @@
   </div>
   <div class="mt-4 pt-3 flex flex-wrap items-center justify-between gap-2.5">
     <div class="flex flex-wrap items-center gap-1.5">
-      <span class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-highest text-secondary font-label-sm text-label-sm font-semibold">${esc(REGION_LABEL[job.region] || "Worldwide")}</span>
       ${tags}
     </div>
     <span class="font-mono-data text-body-sm ${sal ? "text-primary font-semibold" : "text-outline"}">${sal ? esc(sal) : "Salary not disclosed"}</span>
@@ -163,7 +189,7 @@
     set("pv-source", job.source + " feed");
     set("pv-salary", salaryOf(job) || "Not disclosed");
     set("pv-region", REGION_LABEL[job.region] || "Worldwide");
-    set("pv-ats", job.source === "greenhouse" ? "Greenhouse (public API)" : "Ashby (public API)");
+    set("pv-ats", SOURCE_LABEL[job.source] || job.source || "unknown");
     set("pv-posted", ago(job.posted_at) || "unknown");
 
     const apply = document.getElementById("pv-apply");
@@ -207,8 +233,11 @@
   function matches(job, ignoreRegion) {
     if (state.hideGhost && job.ghost) return false;
     if (state.q) {
-      const hay = `${job.title} ${job.company} ${(job.tags || []).join(" ")}`.toLowerCase();
-      if (!hay.includes(state.q)) return false;
+      // Every word must appear somewhere on the row: "python ai engineer"
+      // should find a Python AI engineer, not require that exact phrase.
+      const hay = `${job.title} ${job.company} ${(job.tags || []).join(" ")} ${job.region} ${job.category} ${job.level}`.toLowerCase();
+      const tokens = state.q.split(/\s+/).filter(Boolean);
+      if (!tokens.every((token) => hay.includes(token))) return false;
     }
     if (!ignoreRegion && state.region !== "all" && job.region !== state.region) return false;
     if (state.category && norm(categoryOf(job)) !== norm(state.category)) return false;
@@ -315,6 +344,7 @@
     });
 
     buildPager(matched.length);
+    initZoom();
   }
 
   /* ---------------- eventos ---------------- */
@@ -328,6 +358,13 @@
         state.page = 1;
         render();
       }, 200);
+    });
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        input?.focus();
+        input?.select();
+      }
     });
     input?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -407,7 +444,7 @@
     div.innerHTML =
       '<span class="material-symbols-outlined text-[36px] text-outline block mb-3">search_off</span>' +
       '<p class="font-headline-sm text-headline-sm text-on-surface mb-1">No openings match your filters</p>' +
-      '<p class="font-body-sm text-body-sm text-on-surface-variant">Try clearing the search or widening the salary range.</p>';
+      '<p class="font-body-sm text-body-sm text-on-surface-variant">Try clearing the search, lowering the salary floor or widening the region.</p>';
     container.parentNode.insertBefore(div, container.nextSibling);
   }
 
@@ -474,6 +511,11 @@
       }
       if (region && ["worldwide", "latam", "america", "eu"].includes(region)) {
         state.region = region;
+        paintAll();
+      }
+      const category = params.get("category");
+      if (category) {
+        state.category = category.trim();
         paintAll();
       }
       render();

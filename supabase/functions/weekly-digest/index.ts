@@ -77,6 +77,8 @@ function salaryLine(j: Job): string {
 function renderEmail(sub: Sub, jobs: Job[], unsubUrl: string): { subject: string; html: string } {
   const roleLabel: Record<string, string> = {
     tech: "engineering", data: "data", design: "design", product: "product", devops: "devops",
+    support: "customer support", marketing: "marketing", sales: "sales",
+    admin: "admin & ops", writing: "writing", "data-entry": "data entry",
   };
   const label = roleLabel[(sub.job_role ?? "tech").toLowerCase()] ?? "engineering";
   const region = sub.region ?? "worldwide";
