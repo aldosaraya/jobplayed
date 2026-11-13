@@ -2,7 +2,7 @@
  * Data source: Supabase REST (live), with static /jobs.json as fallback.
  */
 import { initZoom, safeUrl } from "./app.js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./auth.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, supabase } from "./auth.js";
 
 (function () {
   "use strict";
@@ -176,6 +176,73 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./auth.js";
 </article>`;
   }
 
+  /* ---------------- sponsored (pinned) listings ---------------- */
+  // Paid rows live in their own table so the hourly feed refresh can never
+  // delete them. They are pinned above organic results only while they match
+  // the visitor's current search and filters — an irrelevant ad is just spam.
+  let SPONSORED = [];
+  const TRACKED = new Set();
+
+  async function loadSponsored() {
+    try {
+      const { data, error } = await supabase
+        .from("sponsored_jobs")
+        .select("id,title,company,url,logo_url,blurb,salary_min,salary_max,region,category,level,tags,weight")
+        .order("weight", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      SPONSORED = data || [];
+    } catch (err) {
+      console.warn("[radarjobs] sponsored rows unavailable:", err.message);
+      SPONSORED = [];
+    }
+  }
+
+  function trackSponsored(id, kind) {
+    if (kind === "view") {
+      if (TRACKED.has(id)) return;
+      TRACKED.add(id);
+    }
+    supabase.rpc("rj_sponsor_track", { p_id: id, p_kind: kind }).then(() => {}, () => {});
+  }
+
+  function sponsoredCard(job) {
+    const sal = salaryOf(job);
+    const initial = esc((companyLabel(job)[0] || "?").toUpperCase());
+    const logo = job.logo_url
+      ? `<img src="${esc(safeUrl(job.logo_url))}" alt="" width="48" height="48" loading="lazy" class="w-12 h-12 rounded-DEFAULT object-contain bg-surface-container p-1" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}',className:'font-headline-sm text-headline-sm text-primary font-bold'}))">`
+      : `<span class="font-headline-sm text-headline-sm text-primary font-bold">${initial}</span>`;
+    const tags = (job.tags || []).slice(0, 3)
+      .map((t) => `<span class="px-2 py-0.5 rounded-DEFAULT bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-mono">${esc(t)}</span>`)
+      .join("");
+    return `<article class="relative bg-surface-container-low p-5 rounded-DEFAULT shadow-sm border border-primary/40">
+    <span class="absolute -top-2.5 left-4 px-2 py-0.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold tracking-wider uppercase">Sponsored</span>
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div class="flex items-start gap-3.5 min-w-0">
+        <div class="w-12 h-12 rounded-DEFAULT bg-surface-container flex items-center justify-center shrink-0">${logo}</div>
+        <div class="space-y-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-headline-sm text-body-md text-on-surface font-semibold">${esc(companyLabel(job))}</span>
+            ${job.blurb ? `<span class="font-body-sm text-body-sm text-on-surface-variant">${esc(job.blurb)}</span>` : ""}
+          </div>
+          <h3 class="font-headline-md text-headline-sm text-on-surface font-bold">${esc(job.title)}</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">${esc(REGION_LABEL[job.region] || "Worldwide")} · Remote</p>
+        </div>
+      </div>
+      <a class="px-4 py-2 rounded-DEFAULT bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors flex items-center gap-1 shrink-0"
+         href="${esc(safeUrl(job.url))}" target="_blank" rel="noopener noreferrer sponsored"
+         data-sponsor-click="${esc(job.id)}">
+        <span>Apply</span>
+        <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+      </a>
+    </div>
+    <div class="mt-4 pt-3 flex flex-wrap items-center justify-between gap-2.5">
+      <div class="flex flex-wrap items-center gap-1.5">${tags}</div>
+      <span class="font-mono-data text-body-sm ${sal ? "text-primary font-semibold" : "text-outline"}">${sal ? esc(sal) : "Salary not disclosed"}</span>
+    </div>
+  </article>`;
+  }
+
   /* ---------------- preview ---------------- */
   function renderPreview(job) {
     const body = document.getElementById("preview-body");
@@ -323,7 +390,9 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./auth.js";
     const from = (state.page - 1) * PAGE_SIZE;
     const slice = matched.slice(from, from + PAGE_SIZE);
 
-    container.innerHTML = slice.map((j) => cardHTML(j, JOBS.indexOf(j))).join("");
+    const pinned = SPONSORED.filter((j) => matches(j, false)).slice(0, 2);
+    pinned.forEach((j) => trackSponsored(j.id, "view"));
+    container.innerHTML = pinned.map(sponsoredCard).join("") + slice.map((j) => cardHTML(j, JOBS.indexOf(j))).join("");
 
     const empty = document.getElementById("jobs-empty-state");
     if (empty) empty.classList.toggle("hidden", matched.length > 0);
@@ -430,6 +499,11 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./auth.js";
     });
 
     container.addEventListener("click", (e) => {
+      const paid = e.target.closest("[data-sponsor-click]");
+      if (paid) {
+        trackSponsored(paid.getAttribute("data-sponsor-click"), "click");
+        return; // let the link open
+      }
       const card = e.target.closest("article[data-idx]");
       if (!card) return;
       if (e.target.closest("a")) return; // dejar que el link externo funcione
@@ -512,6 +586,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./auth.js";
     paintAll();
     applyDeepLinks();
     loadingRows(5);
+    loadSponsored();
 
     try {
       const all = await loadJobs(function (rows) {
