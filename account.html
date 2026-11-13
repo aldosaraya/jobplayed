@@ -61,6 +61,12 @@
             <p class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Plan</p>
             <p id="ov-plan" class="font-headline-md text-headline-md text-on-surface mt-1">—</p>
             <p id="ov-plan-note" class="font-body-sm text-body-sm text-on-surface-variant mt-1"></p>
+            <a class="btn btn-primary mt-3 w-full" href="pricing.html#checkout-engine" data-free-only>
+              Unlock Radar VIP · $4.99/mo
+            </a>
+            <a class="btn btn-ghost mt-3 w-full" href="account.html#alerts" data-vip-only>
+              Alerts are on
+            </a>
           </div>
           <div class="p-5 rounded-xl bg-surface-container-low">
             <p class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Next digest</p>
@@ -87,8 +93,18 @@
         </div>
 
         <div class="p-6 rounded-xl bg-surface-container-low">
-          <h2 class="font-headline-sm text-headline-md text-on-surface mb-3">Next email preview</h2>
-          <div id="ov-preview" class="flex flex-col gap-2"></div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 class="font-headline-sm text-headline-md text-on-surface">Next email preview</h2>
+            <span class="lock-tag" data-free-only style="font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);background:rgba(183,109,255,.18);border:1px solid rgba(221,183,255,.45);padding:6px 10px;border-radius:999px">VIP only</span>
+          </div>
+          <div class="lock-wrap" id="ov-preview-wrap">
+            <div id="ov-preview" class="flex flex-col gap-2"></div>
+            <div class="lock-overlay" id="ov-preview-lock" hidden>
+              <span class="lock-tag">VIP only</span>
+              <p>The Monday email with your matched openings is part of Radar VIP.</p>
+              <a class="btn btn-primary" href="pricing.html#checkout-engine">Unlock for $4.99/mo</a>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -158,6 +174,12 @@
             <span id="alerts-count" class="font-mono-data text-body-sm text-secondary">—</span>
           </div>
           <div id="alerts-preview" class="flex flex-col gap-2"></div>
+          <div class="mt-4 pt-4 border-t border-outline-variant/30 flex flex-wrap items-center justify-between gap-3" data-free-only>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">
+              These filters already work — VIP is what sends them to your inbox every Monday.
+            </p>
+            <a class="btn btn-primary" href="pricing.html#checkout-engine">Unlock for $4.99/mo</a>
+          </div>
         </div>
       </section>
 
@@ -171,8 +193,8 @@
             <div><dt class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Last digest sent</dt><dd id="sub-digest" class="font-body-md text-body-md text-on-surface mt-1">—</dd></div>
           </dl>
           <div class="mt-6 pt-5 border-t border-outline-variant/30 flex flex-wrap items-center gap-3">
-            <a class="btn btn-primary" href="pricing.html" data-guest-only>Activate for $4.99/mo</a>
-            <a class="btn btn-ghost" href="pricing.html" data-member-only>Manage billing</a>
+            <a class="btn btn-primary" href="pricing.html#checkout-engine" data-free-only>Activate Radar VIP · $4.99/mo</a>
+            <a class="btn btn-ghost" href="pricing.html#checkout-engine" data-vip-only>Manage billing</a>
             <span class="font-body-sm text-body-sm text-outline">14-day money-back guarantee. Cancel from any email.</span>
           </div>
         </div>
@@ -209,7 +231,7 @@
 
 <script type="module">
 import { requireAuth, getAccount, saveAlerts, signOut } from "./auth.js";
-import { pickJobs, money, ago, esc } from "./app.js";
+import { pickJobs, money, ago, esc, applyPlan } from "./app.js";
 
 const $ = (s) => document.querySelector(s);
 const ROLE_LABEL = {
@@ -225,6 +247,7 @@ async function init() {
   const acc = await getAccount();
   const p = acc.profile || {};
   const sub = acc.subscription || {};
+  applyPlan(acc.isActive);
 
   /* ---------- tabs ---------- */
   const tabs = Array.from(document.querySelectorAll("[data-tab]"));
@@ -315,7 +338,15 @@ async function init() {
   }
 
   preview($("#alerts-preview"), $("#alerts-count"));
+
+  // The digest preview is the paid product. The rows are public job data, so we
+  // render them for everyone and blur the block: the upsell shows what is behind
+  // the glass instead of an empty box.
   preview($("#ov-preview"), null);
+  if (!acc.isActive) {
+    $("#ov-preview-wrap").classList.add("is-locked");
+    $("#ov-preview-lock").hidden = false;
+  }
 
   let t;
   [role, region, salary].forEach((el) => el.addEventListener("input", () => {

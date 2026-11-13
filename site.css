@@ -42,6 +42,54 @@ html.auth  [data-guest-only]  { display: none !important; }
 html:not(.auth):not(.guest) [data-member-only],
 html:not(.auth):not(.guest) [data-guest-only] { visibility: hidden; }
 
+/* ---------- plan-aware visibility (set by app.js after it reads the subscription) ---------- */
+/* vip   = signed in with an active Radar VIP subscription
+   free  = signed in without one
+   guest = no session                                                        */
+html:not(.vip) [data-vip-only] { display: none !important; }
+html.vip [data-free-only] { display: none !important; }
+
+/* Locked preview: the content stays in the DOM (so it is honest about what it
+   would show) but is blurred and cannot be clicked until VIP is active. */
+.lock-wrap { position: relative; }
+.lock-wrap.is-locked {
+  min-height: 210px;
+  border-radius: var(--radius-outer);
+  overflow: hidden;
+}
+.lock-wrap.is-locked > :not(.lock-overlay) {
+  filter: blur(5px) saturate(.6);
+  opacity: .55;
+  pointer-events: none;
+  user-select: none;
+}
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 16px;
+  border-radius: inherit;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(18,19,23,.35), rgba(18,19,23,.75));
+  backdrop-filter: blur(1px);
+}
+.lock-overlay .lock-tag {
+  font: 600 10px/1 'IBM Plex Mono', monospace;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(183,109,255,.18);
+  border: 1px solid rgba(221,183,255,.45);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+.lock-overlay p { margin: 0; max-width: 320px; font: 400 12px/1.5 'IBM Plex Sans', system-ui, sans-serif; color: var(--muted); }
+
 /* ---------- single-active hover zoom ---------- */
 [data-zoom] {
   transition: transform 180ms cubic-bezier(.22,.61,.36,1),

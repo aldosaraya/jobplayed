@@ -46,14 +46,40 @@ export async function pickJobs({ role = "tech", region = "worldwide", salary = 0
   return data || [];
 }
 
+/* ------------------------------------------------------------------ plan */
+
+/** True when the signed-in user has an active Radar VIP subscription. */
+export async function getPlan(session) {
+  if (!session) return false;
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("id", session.user.id)
+    .maybeSingle();
+  if (error) return false;
+  return data?.status === "active";
+}
+
+/** Stamps html.vip / html.free so CSS can hide or unlock plan-gated blocks. */
+export function applyPlan(isVip) {
+  const root = document.documentElement;
+  root.classList.toggle("vip", Boolean(isVip));
+  root.classList.toggle("free", !isVip && root.classList.contains("auth"));
+  root.dataset.plan = isVip ? "vip" : "free";
+}
+
 /* ------------------------------------------------------------------ nav */
 
 async function mountSession() {
   let session = null;
   try { session = await getSession(); } catch { session = null; }
 
-  document.documentElement.classList.toggle("auth", Boolean(session));
-  document.documentElement.classList.toggle("guest", !session);
+  const root = document.documentElement;
+  root.classList.toggle("auth", Boolean(session));
+  root.classList.toggle("guest", !session);
+
+  const isVip = await getPlan(session);
+  applyPlan(isVip);
 
   const slot = $("#nav-auth");
   if (!slot) return session;
@@ -78,7 +104,9 @@ async function mountSession() {
         <p class="menu-label">Signed in</p>
         <a role="menuitem" href="account.html"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
         <a role="menuitem" href="account.html#alerts"><span class="material-symbols-outlined">tune</span>My alerts</a>
-        <a role="menuitem" href="account.html#subscription"><span class="material-symbols-outlined">credit_card</span>Subscription</a>
+        ${isVip
+          ? '<a role="menuitem" href="account.html#subscription"><span class="material-symbols-outlined">credit_card</span>My VIP plan</a>'
+          : '<a role="menuitem" class="upgrade" href="pricing.html#checkout-engine"><span class="material-symbols-outlined">workspace_premium</span>Upgrade to VIP</a>'}
         <a role="menuitem" href="jobs.html"><span class="material-symbols-outlined">work</span>Explore jobs</a>
         <button role="menuitem" class="danger" type="button" id="acct-signout"><span class="material-symbols-outlined">logout</span>Sign out</button>
       </div>
