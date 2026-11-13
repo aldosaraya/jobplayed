@@ -1,7 +1,8 @@
 /* RadarJobs — job feed renderer, filters, sort and pagination.
  * Data source: Supabase REST (live), with static /jobs.json as fallback.
  */
-import { initZoom } from "./app.js";
+import { initZoom, safeUrl } from "./app.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./auth.js";
 
 (function () {
   "use strict";
@@ -11,6 +12,8 @@ import { initZoom } from "./app.js";
   container.setAttribute("data-zoom-group", "");
 
   const PAGE_SIZE = 10;
+  const LOAD_BATCH = 500;      // rows per REST call
+  const BATCH_PAUSE = 120;     // ms between calls — 6 pages, not 6k requests
   const REGION_LABEL = {
     worldwide: "Worldwide",
     latam: "Latam Only",
@@ -159,7 +162,7 @@ import { initZoom } from "./app.js";
       </div>
     </div>
     <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
-      <a class="p-2 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" href="${esc(job.url)}" target="_blank" rel="noopener" title="View posting at original source">
+      <a class="p-2 rounded-DEFAULT bg-surface-container text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" href="${esc(safeUrl(job.url))}" target="_blank" rel="noopener noreferrer" title="View posting at original source">
         <span class="material-symbols-outlined text-[20px]">open_in_new</span>
       </a>
     </div>
@@ -194,7 +197,7 @@ import { initZoom } from "./app.js";
 
     const apply = document.getElementById("pv-apply");
     if (apply) {
-      apply.href = job.url || "#";
+      apply.href = safeUrl(job.url);
       apply.innerHTML = `Apply on ${esc(companyLabel(job))} <span class="material-symbols-outlined text-[18px]">launch</span>`;
     }
 
@@ -449,81 +452,90 @@ import { initZoom } from "./app.js";
   }
 
   /* ---------------- arranque ---------------- */
-  // Live feed: Supabase first (paged, anon key — public by design), then
-  // the static jobs.json baked at deploy time as a fallback.
-  const SUPA_URL = "https://juijmkcfbjthohjpgflr.supabase.co";
-  const SUPA_ANON =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1aWpta2NmYmp0aG9oanBnZmxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1NzQ3MDEsImV4cCI6MjEwODE1MDcwMX0.nXQcCeRno_SXhQziizZ4sM4vQZxLKqgO6uv1tWcmAAU";
+  // Live feed: Supabase first (paged, anon key — public by design), then the
+  // static jobs.json baked at deploy time as a fallback. The first batch paints
+  // immediately and the rest arrives in the background, so a 6k-row feed never
+  // shows a blank screen.
+  const SUPA_URL = SUPABASE_URL;
+  const SUPA_ANON = SUPABASE_ANON_KEY;   // anon key: public by design, RLS guards the data
+  const COLS = "title,company,salary_min,salary_max,url,source,tags,posted_at,region,category,level,ghost";
 
-  async function loadJobs() {
-    const cols =
-      "title,company,salary_min,salary_max,url,source,tags,posted_at,region,category,level,ghost";
-    const base =
-      SUPA_URL + "/rest/v1/jobs?select=" + cols + "&order=posted_at.desc.nullslast&limit=1000";
-    const headers = {
-      apikey: SUPA_ANON,
-      Authorization: "Bearer " + SUPA_ANON,
-    };
-    try {
-      const first = await fetch(base, { headers: headers, cache: "no-cache" });
-      if (!first.ok) throw new Error("HTTP " + first.status);
-      const rows = await first.json();
-      // el header Range devuelve 416 a partir de offset 1000; offset= en la
-      // query es la forma fiable de paginar
-      for (let off = 1000; off <= 20000; off += 1000) {
-        const res = await fetch(base + "&offset=" + off, { headers: headers, cache: "no-cache" });
+  function restUrl(offset) {
+    return SUPA_URL + "/rest/v1/jobs?select=" + COLS +
+      "&order=posted_at.desc.nullslast&limit=" + LOAD_BATCH + (offset ? "&offset=" + offset : "");
+  }
+
+  async function loadJobs(onBatch) {
+    const headers = { "apikey": SUPA_ANON, "Authorization": "Bearer " + SUPA_ANON };
+    const rows = [];
+    for (let off = 0; off <= 20000; off += LOAD_BATCH) {
+      if (off) await new Promise((r) => setTimeout(r, BATCH_PAUSE));
+      let res;
+      try {
+        res = await fetch(restUrl(off), { headers: headers, cache: "no-cache" });
         if (!res.ok) throw new Error("HTTP " + res.status);
-        const batch = await res.json();
-        rows.push.apply(rows, batch);
-        if (batch.length < 1000) break;
+      } catch (err) {
+        if (!rows.length) throw err;          // nothing on screen yet -> static fallback
+        console.warn("[radarjobs] stopped paging:", err.message);
+        break;
       }
-      if (!rows.length) throw new Error("supabase feed empty");
-      console.log("[radarjobs] live feed:", rows.length, "jobs");
-      return rows;
-    } catch (err) {
-      console.warn("[radarjobs] supabase unavailable, falling back to jobs.json:", err.message);
-      const res = await fetch("jobs.json", { cache: "no-cache" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return await res.json();
+      const batch = await res.json();
+      rows.push.apply(rows, batch);
+      if (rows.length) onBatch(rows.slice());
+      if (batch.length < LOAD_BATCH) break;
     }
+    return rows;
+  }
+
+  function applyDeepLinks() {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("q");
+    if (q) {
+      state.q = q.trim().toLowerCase();
+      const input = document.getElementById("job-query-input");
+      if (input) input.value = q.trim();
+    }
+    const region = params.get("region");
+    if (region && ["worldwide", "latam", "america", "eu"].includes(region)) state.region = region;
+    const category = params.get("category");
+    if (category) state.category = category.trim();
+    paintAll();
+  }
+
+  function loadingRows(n) {
+    container.innerHTML = Array.from({ length: n }, () => '<div class="skeleton" style="height:96px"></div>').join("");
   }
 
   async function boot() {
     ensureEmptyState();
     wire();
     paintAll();
-
-    container.innerHTML =
-      '<div class="p-10 text-center text-body-sm text-on-surface-variant">Loading live openings…</div>';
+    applyDeepLinks();
+    loadingRows(5);
 
     try {
-      JOBS = await loadJobs();
-      console.log("[radarjobs] loaded", JOBS.length, "jobs");
-
-      // Deep link from the landing page: /jobs?q=python&region=latam
-      const params = new URLSearchParams(location.search);
-      const q = params.get("q");
-      const region = params.get("region");
-      if (q) {
-        state.q = q.trim().toLowerCase();
-        const input = document.getElementById("job-query-input");
-        if (input) input.value = q.trim();
-      }
-      if (region && ["worldwide", "latam", "america", "eu"].includes(region)) {
-        state.region = region;
-        paintAll();
-      }
-      const category = params.get("category");
-      if (category) {
-        state.category = category.trim();
-        paintAll();
-      }
+      const all = await loadJobs(function (rows) {
+        JOBS = rows;
+        render();
+      });
+      JOBS = all;
+      paintAll();
       render();
+      console.log("[radarjobs] loaded", JOBS.length, "jobs");
     } catch (err) {
-      console.error("[radarjobs] feed error", err);
-      container.innerHTML =
-        '<div class="p-10 text-center"><p class="font-headline-sm text-on-surface mb-1">Could not load the job feed</p>' +
-        '<p class="font-body-sm text-on-surface-variant">' + esc(err.message) + "</p></div>";
+      console.error("[radarjobs] live feed failed, using jobs.json:", err.message);
+      try {
+        const res = await fetch("jobs.json", { cache: "no-cache" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        JOBS = await res.json();
+        applyDeepLinks();
+        render();
+        console.log("[radarjobs] fallback feed:", JOBS.length, "jobs");
+      } catch (err2) {
+        container.innerHTML =
+          '<div class="p-10 text-center"><p class="font-headline-sm text-on-surface mb-1">Could not load the job feed</p>' +
+          '<p class="font-body-sm text-on-surface-variant">' + esc(err2.message) + "</p></div>";
+      }
     }
   }
 

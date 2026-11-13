@@ -11,6 +11,9 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 export const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/** A feed URL is untrusted input: never let javascript:/data: become an href. */
+export const safeUrl = (url) => (/^https?:\/\//i.test(String(url ?? "")) ? String(url) : "#");
+
 const REGION_LABEL = { worldwide: "Worldwide", latam: "LatAm only", america: "Americas", eu: "Europe" };
 
 export function money(min, max) {
@@ -73,7 +76,8 @@ async function mountSession() {
       </button>
       <div class="nav-menu" id="acct-menu" role="menu" hidden>
         <p class="menu-label">Signed in</p>
-        <a role="menuitem" href="account.html"><span class="material-symbols-outlined">tune</span>My alerts</a>
+        <a role="menuitem" href="account.html"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+        <a role="menuitem" href="account.html#alerts"><span class="material-symbols-outlined">tune</span>My alerts</a>
         <a role="menuitem" href="account.html#subscription"><span class="material-symbols-outlined">credit_card</span>Subscription</a>
         <a role="menuitem" href="jobs.html"><span class="material-symbols-outlined">work</span>Explore jobs</a>
         <button role="menuitem" class="danger" type="button" id="acct-signout"><span class="material-symbols-outlined">logout</span>Sign out</button>
@@ -124,7 +128,7 @@ const rowHTML = (job) => {
   const tags = (job.tags || []).slice(0, 3)
     .map((t) => `<span class="font-label-sm text-label-sm px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant">${esc(t)}</span>`)
     .join("");
-  return `<a class="block p-5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors" href="${esc(job.url)}" target="_blank" rel="noopener">
+  return `<a class="block p-5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors" href="${esc(safeUrl(job.url))}" target="_blank" rel="noopener noreferrer">
     <div class="flex flex-wrap items-center gap-2 mb-1">
       <span class="font-headline-sm text-headline-sm text-on-surface font-semibold">${esc(job.title)}</span>
       <span class="font-mono-data text-label-sm px-2 py-0.5 rounded-DEFAULT bg-surface-container-high text-secondary">${esc(job.source || "ats")}</span>
@@ -217,7 +221,13 @@ function initDigest() {
 }
 
 /* ------------------------------------------------------ start */
+function stampYear() {
+  const y = String(new Date().getFullYear());
+  document.querySelectorAll("[data-year]").forEach((el) => { el.textContent = y; });
+}
+
 function boot() {
+  stampYear();
   initZoom();
   mountSession();
   initHomeFeed();

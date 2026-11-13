@@ -10,6 +10,8 @@
 <script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary":"#d0bcff","tertiary-container":"#b175ec","on-primary-container":"#400071","error":"#ffb4ab","on-surface-variant":"#cfc2d6","secondary-container":"#571bc1","surface-container-highest":"#343439","surface-container-lowest":"#0d0e12","surface":"#121317","surface-variant":"#343439","on-background":"#e3e2e8","on-secondary-fixed-variant":"#5516be","primary-fixed":"#f0dbff","primary-container":"#b76dff","background":"#121317","on-tertiary-fixed-variant":"#62259b","on-primary-fixed-variant":"#6900b3","surface-container-high":"#292a2e","on-secondary":"#3c0091","inverse-surface":"#e3e2e8","on-error":"#690005","tertiary":"#ddb8ff","surface-dim":"#121317","on-primary":"#490080","tertiary-fixed-dim":"#ddb8ff","secondary-fixed-dim":"#d0bcff","primary":"#ddb7ff","on-secondary-container":"#c4abff","inverse-primary":"#842bd2","error-container":"#93000a","primary-fixed-dim":"#ddb7ff","on-secondary-fixed":"#23005c","on-error-container":"#ffdad6","outline-variant":"#4d4354","secondary-fixed":"#e9ddff","surface-bright":"#38393e","surface-container":"#1f1f24","inverse-on-surface":"#2f3035","outline":"#988d9f","on-tertiary-container":"#400071","on-tertiary":"#490081","tertiary-fixed":"#f0dbff","on-tertiary-fixed":"#2c0051","on-primary-fixed":"#2c0051","on-surface":"#e3e2e8","surface-tint":"#ddb7ff","surface-container-low":"#1a1b20"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xs":"0.25rem","space-sm":"0.5rem","gutter-desktop":"1.5rem","margin-desktop":"2rem","margin":"1rem","space-lg":"1.5rem","space-md":"1rem","space-xl":"2.5rem","gutter":"1rem"},"fontFamily":{"headline-lg":["IBM Plex Sans","system-ui","sans-serif"],"body-sm":["IBM Plex Sans","system-ui","sans-serif"],"label-sm":["IBM Plex Sans","system-ui","sans-serif"],"headline-sm":["IBM Plex Sans","system-ui","sans-serif"],"body-lg":["IBM Plex Sans","system-ui","sans-serif"],"body-md":["IBM Plex Sans","system-ui","sans-serif"],"display-lg-mobile":["IBM Plex Sans","system-ui","sans-serif"],"headline-md":["IBM Plex Sans","system-ui","sans-serif"],"label-md":["IBM Plex Sans","system-ui","sans-serif"],"display-lg":["IBM Plex Sans","system-ui","sans-serif"],"mono-data":["IBM Plex Mono","ui-monospace","monospace"]},"fontSize":{"headline-lg":["28px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"400"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0em","fontWeight":"400"}],"display-lg-mobile":["32px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"500"}],"display-lg":["48px",{"lineHeight":"54px","letterSpacing":"-0.025em","fontWeight":"600"}],"mono-data":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"500"}]}}}};</script>
 <link rel="stylesheet" href="site.css"/>
 <script src="boot.js"></script>
+<link rel="alternate" type="application/rss+xml" title="RadarJobs — latest openings" href="rss.xml"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23121317%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%278%27 fill=%27none%27 stroke=%27%23ddb7ff%27 stroke-width=%272%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%272.5%27 fill=%27%23ddb7ff%27/%3E%3C/svg%3E"/>
 </head>
 <body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary selection:text-on-primary">
 
@@ -31,6 +33,16 @@
     <p class="font-body-lg text-body-md text-on-surface-variant mt-2">
       Weekly alert filters, plan status and the address your digest is sent to.
     </p>
+  </div>
+
+  <div id="checkout-notice" class="mb-6 p-4 rounded-xl bg-surface-container-low border border-primary/30 flex items-start gap-3" hidden>
+    <span class="material-symbols-outlined text-primary text-[20px]">hourglass_top</span>
+    <div>
+      <p class="font-body-md text-body-md text-on-surface font-medium">Payment received — activation in progress</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+        Paddle confirms the transaction by webhook. This page updates on the next load, usually within a minute.
+      </p>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -185,7 +197,7 @@
 
 <footer class="w-full border-t border-outline-variant/30 py-8 mt-10">
   <div class="w-full max-w-7xl mx-auto px-gutter-desktop flex flex-wrap items-center justify-between gap-4">
-    <span class="font-body-sm text-body-sm text-on-surface-variant">RadarJobs © 2026</span>
+    <span class="font-body-sm text-body-sm text-on-surface-variant">RadarJobs © <span data-year>2026</span></span>
     <div class="flex flex-wrap items-center gap-5">
       <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" href="jobs.html">Jobs</a>
       <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" href="pricing.html">Pricing</a>
@@ -228,6 +240,11 @@ async function init() {
     showTab(el.dataset.tab);
   }));
   showTab((location.hash || "#overview").slice(1));
+
+  if (new URLSearchParams(location.search).get("checkout") === "success") {
+    $("#checkout-notice").hidden = false;
+    showTab("subscription");
+  }
 
   /* ---------- form prefill ---------- */
   const role = $("#alerts-role"), region = $("#alerts-region"), salary = $("#alerts-salary");

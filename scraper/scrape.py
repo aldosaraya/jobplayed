@@ -382,12 +382,18 @@ def build(title, company, url, source, region, tags=None, posted=None, body="",
     dt = parse_date(posted)
     ghost = bool(dt and (datetime.now(timezone.utc) - dt) > timedelta(days=GHOST_DAYS))
 
+    # Only ever ship http(s) links: a feed that carries a javascript: or data:
+    # URL turns every card into an XSS vector on our own domain.
+    url = (url or "").strip()
+    if not re.match(r"^https?://", url, re.I):
+        url = ""
+
     return {
         "title": (title or "").strip()[:180],
         "company": (company or "").strip()[:80],
         "salary_min": smin,
         "salary_max": smax,
-        "url": (url or "").strip(),
+        "url": url,
         "source": source,
         "tags": [str(t)[:32] for t in tags][:4],
         "posted_at": dt.isoformat() if dt else None,
@@ -960,11 +966,12 @@ def write_rss(slim, path, limit=60):
 
     out = [
         '<?xml version="1.0" encoding="UTF-8"?>',
+        '<?xml-stylesheet type="text/xsl" href="/rss.xsl"?>',
         '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
         "<channel>",
         "  <title>RadarJobs — remote openings</title>",
         f"  <link>{base}/jobs</link>",
-        "  <description>Fresh remote job openings, refreshed every 6 hours.</description>",
+        "  <description>Fresh remote job openings, refreshed every hour.</description>",
         "  <language>en</language>",
         f"  <lastBuildDate>{format_datetime(now)}</lastBuildDate>",
         f'  <atom:link href="{base}/rss.xml" rel="self" type="application/rss+xml"/>',

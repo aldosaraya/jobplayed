@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RSS feed | RadarJobs</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="site.css"/>
+<script src="boot.js"></script>
+<style>
+  .feed-wrap { max-width: 820px; margin: 0 auto; padding: 48px 24px 64px; }
+  .feed-wrap h1 { margin: 0 0 8px; font: 600 28px/1.2 'IBM Plex Sans', system-ui, sans-serif; letter-spacing: -.02em; color: var(--text); }
+  .feed-sub { margin: 0; max-width: 620px; color: var(--muted); font: 400 15px/1.6 'IBM Plex Sans', system-ui, sans-serif; }
+  .feed-sub code { font: 500 13px/1 'IBM Plex Mono', monospace; color: var(--accent); }
+  .feed-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 20px 0 0; }
+  .feed-meta { font: 500 11px/1 'IBM Plex Mono', monospace; letter-spacing: .06em; color: var(--outline); text-transform: uppercase; }
+  .feed-list { list-style: none; margin: 32px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .feed-item { padding: 14px 16px; border-radius: var(--radius-outer); background: var(--surface-low); transition: background-color 160ms ease; }
+  .feed-item:hover { background: var(--surface-container); }
+  .feed-item a { display: block; font: 600 15px/1.35 'IBM Plex Sans', system-ui, sans-serif; color: var(--text); text-decoration: none; }
+  .feed-item a:hover { color: var(--accent); }
+  .feed-item p { margin: 4px 0 0; color: var(--muted); font: 400 13px/1.5 'IBM Plex Sans', system-ui, sans-serif; }
+  .feed-item time { display: block; margin-top: 8px; font: 500 11px/1 'IBM Plex Mono', monospace; letter-spacing: .06em; color: var(--outline); }
+  .feed-foot { max-width: 820px; margin: 0 auto; padding: 0 24px 56px; color: var(--outline); font: 400 12px/1.6 'IBM Plex Sans', system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <div class="bar">
+    <a class="brand" href="index.html">RadarJobs</a>
+    <nav class="top-nav" aria-label="Main">
+      <a href="jobs.html">Explore jobs</a>
+      <a href="pricing.html">Pricing</a>
+    </nav>
+    <div class="nav-slot" id="nav-auth"></div>
+  </div>
+</header>
+
+<main class="feed-wrap">
+  <h1>Latest openings, as a feed</h1>
+  <p class="feed-sub">
+    The same list any RSS reader gets from <code>/rss.xml</code>. Browsers show that file as raw
+    XML, so this page renders it for humans — the machine-readable feed is untouched.
+  </p>
+
+  <div class="feed-actions">
+    <a class="btn btn-ghost" href="rss.xml" target="_blank" rel="noopener">Open the raw feed</a>
+    <button class="btn btn-ghost" type="button" id="copy-feed">Copy feed URL</button>
+    <span id="copy-done" class="toast" hidden>
+      <span class="material-symbols-outlined" style="font-size:16px">check_circle</span><span>Copied</span>
+    </span>
+    <span id="feed-meta" class="feed-meta"></span>
+  </div>
+
+  <ul id="feed-list" class="feed-list">
+    <li class="skeleton" style="height:88px"></li>
+    <li class="skeleton" style="height:88px"></li>
+    <li class="skeleton" style="height:88px"></li>
+  </ul>
+</main>
+
+<footer class="feed-foot">
+  RadarJobs © <span data-year>2026</span> ·
+  <a href="jobs.html">Jobs</a> ·
+  <a href="pricing.html">Pricing</a> ·
+  <a href="privacy.html">Privacy</a>
+</footer>
+
+<script type="module" src="app.js"></script>
+<script type="module">
+const list = document.getElementById("feed-list");
+const meta = document.getElementById("feed-meta");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeUrl = (u) => (/^https?:\/\//i.test(String(u ?? "")) ? String(u) : "#");
+
+function fmtDate(raw) {
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+try {
+  const res = await fetch("rss.xml", { cache: "no-cache" });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const doc = new DOMParser().parseFromString(await res.text(), "application/xml");
+  if (doc.querySelector("parsererror")) throw new Error("invalid feed");
+
+  const items = Array.from(doc.querySelectorAll("item"));
+  const built = doc.querySelector("lastBuildDate");
+  meta.textContent = items.length + " items" + (built ? " · " + built.textContent.slice(0, 16) : "");
+
+  list.innerHTML = items.length
+    ? items.map((item) => {
+        const title = item.querySelector("title")?.textContent || "Untitled";
+        const link = safeUrl(item.querySelector("link")?.textContent);
+        const desc = item.querySelector("description")?.textContent || "";
+        const pub = fmtDate(item.querySelector("pubDate")?.textContent);
+        return '<li class="feed-item">' +
+          '<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + esc(title) + "</a>" +
+          (desc ? "<p>" + esc(desc) + "</p>" : "") +
+          (pub ? "<time>" + esc(pub) + "</time>" : "") +
+          "</li>";
+      }).join("")
+    : '<li class="feed-item"><p>The feed is empty right now.</p></li>';
+} catch (err) {
+  list.innerHTML = '<li class="feed-item"><p>Could not load the feed (' + esc(err.message) +
+    '). The raw file is still at <a href="rss.xml">/rss.xml</a>.</p></li>';
+}
+
+document.getElementById("copy-feed").addEventListener("click", async () => {
+  const url = location.origin + "/rss.xml";
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+  const done = document.getElementById("copy-done");
+  done.hidden = false;
+  setTimeout(() => { done.hidden = true; }, 2000);
+});
+</script>
+</body>
+</html>

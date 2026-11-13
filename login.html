@@ -5,6 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Log in | RadarJobs</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
 <link rel="stylesheet" href="site.css"/>
 <script src="boot.js"></script>
 </head>
@@ -23,63 +24,190 @@
 
 <main class="auth-wrap">
   <div class="auth-card">
-    <h1>Log in</h1>
-    <p class="auth-sub">Access your alerts, your plan and the weekly digest.</p>
 
-    <form id="login-form" novalidate>
-      <div class="field">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@domain.com"/>
-      </div>
+    <!-- 1. normal login -->
+    <section id="view-login">
+      <h1>Log in</h1>
+      <p class="auth-sub">Access your alerts, your plan and the weekly digest.</p>
 
-      <div class="field">
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Your password"/>
-      </div>
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@domain.com"/>
+        </div>
 
-      <div id="msg" class="auth-msg" hidden></div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Your password"/>
+        </div>
 
-      <button class="btn btn-primary btn-block" id="submit-btn" type="submit">Log in</button>
-    </form>
+        <div id="msg" class="auth-msg" hidden></div>
 
-    <p class="auth-foot">
-      No account yet? <a href="signup.html">Create one free</a>
-    </p>
+        <button class="btn btn-primary btn-block" id="submit-btn" type="submit">Log in</button>
+
+        <p class="auth-legal">
+          <a href="#" id="forgot-link">Forgot your password?</a>
+        </p>
+      </form>
+
+      <p class="auth-foot">
+        No account yet? <a href="signup.html">Create one free</a>
+      </p>
+    </section>
+
+    <!-- 2. request a reset link -->
+    <section id="view-forgot" hidden>
+      <h1>Reset your password</h1>
+      <p class="auth-sub">We send a one-time link to the address on your account.</p>
+
+      <form id="forgot-form" novalidate>
+        <div class="field">
+          <label for="forgot-email">Email</label>
+          <input id="forgot-email" name="email" type="email" required autocomplete="email" placeholder="you@domain.com"/>
+        </div>
+
+        <div id="forgot-msg" class="auth-msg" hidden></div>
+
+        <button class="btn btn-primary btn-block" id="forgot-btn" type="submit">Send reset link</button>
+      </form>
+
+      <p class="auth-foot"><a href="#" id="back-link">Back to log in</a></p>
+    </section>
+
+    <!-- 3. set a new password (arriving from the email link) -->
+    <section id="view-recovery" hidden>
+      <h1>Set a new password</h1>
+      <p class="auth-sub">Your reset link is valid. Pick a password you have not used here before.</p>
+
+      <form id="recovery-form" novalidate>
+        <div class="field">
+          <label for="new-password">New password</label>
+          <input id="new-password" name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"/>
+        </div>
+
+        <div class="field">
+          <label for="new-password-2">Repeat the password</label>
+          <input id="new-password-2" name="password2" type="password" required minlength="8" autocomplete="new-password" placeholder="Same password again"/>
+        </div>
+
+        <div id="recovery-msg" class="auth-msg" hidden></div>
+
+        <button class="btn btn-primary btn-block" id="recovery-btn" type="submit">Save password</button>
+      </form>
+    </section>
+
   </div>
 </main>
 
 <script type="module" src="app.js"></script>
 <script type="module">
-import { signIn, getSession } from "./auth.js";
+import { signIn, getSession, safeNext, requestPasswordReset, updatePassword } from "./auth.js";
 
-const form = document.getElementById("login-form");
-const btn = document.getElementById("submit-btn");
-const msg = document.getElementById("msg");
-const next = new URLSearchParams(location.search).get("next");
+const $ = (s) => document.querySelector(s);
+const next = safeNext(new URLSearchParams(location.search).get("next"));
+const isRecovery = new URLSearchParams(location.search).get("recovery") === "1";
 
-function show(text, kind) {
-  msg.textContent = text;
-  msg.hidden = false;
-  msg.className = "auth-msg " + (kind === "error" ? "is-error" : "is-ok");
+function show(box, text, kind) {
+  box.textContent = text;
+  box.hidden = false;
+  box.className = "auth-msg " + (kind === "error" ? "is-error" : "is-ok");
 }
 
-// Already signed in? Skip the form.
-if (await getSession()) location.href = next || "jobs.html";
+function view(name) {
+  ["login", "forgot", "recovery"].forEach((n) => { $("#view-" + n).hidden = n !== name; });
+}
 
-form.addEventListener("submit", async (e) => {
+/* ---------- brute-force guard: 5 misses → 2 minutes off ----------
+   Client-side only, so a script can wipe it; Supabase still applies its own
+   per-IP rate limit. This exists to stop the honest "keep guessing" case. */
+const LOCK_KEY = "rj_login_lock";
+const MAX_TRIES = 5;
+const LOCK_MS = 2 * 60 * 1000;
+
+function lockState() {
+  try {
+    const v = JSON.parse(localStorage.getItem(LOCK_KEY) || "{}");
+    return { tries: Number(v.tries) || 0, until: Number(v.until) || 0 };
+  } catch {
+    return { tries: 0, until: 0 };
+  }
+}
+function saveLock(v) { localStorage.setItem(LOCK_KEY, JSON.stringify(v)); }
+
+const msg = $("#msg");
+const btn = $("#submit-btn");
+let countdown = null;
+
+function remaining() { return Math.max(0, lockState().until - Date.now()); }
+
+function paintLock() {
+  const left = remaining();
+  if (left > 0) {
+    btn.disabled = true;
+    show(msg, `Too many attempts. Try again in ${Math.ceil(left / 1000)}s.`, "error");
+    return true;
+  }
+  if (btn.dataset.locked === "1") {
+    btn.dataset.locked = "0";
+    btn.disabled = false;
+    msg.hidden = true;
+  }
+  return false;
+}
+
+function startCountdown() {
+  btn.dataset.locked = "1";
+  clearInterval(countdown);
+  paintLock();
+  countdown = setInterval(() => {
+    if (!paintLock()) {
+      clearInterval(countdown);
+      btn.textContent = "Log in";
+    }
+  }, 1000);
+}
+
+/* ---------- routing ---------- */
+const session = await getSession();
+
+if (isRecovery && session) {
+  view("recovery");
+} else if (session) {
+  location.href = next;
+} else if (isRecovery && !session) {
+  show(msg, "That reset link has expired. Request a new one.", "error");
+}
+
+if (paintLock()) startCountdown();
+
+$("#forgot-link").addEventListener("click", (e) => {
   e.preventDefault();
+  view("forgot");
+  $("#forgot-email").value = $("#email").value.trim();
+  $("#forgot-email").focus();
+});
+
+$("#back-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  view("login");
+});
+
+/* ---------- login ---------- */
+$("#login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (remaining() > 0) return;
   msg.hidden = true;
 
-  const email = form.email.value.trim();
-  const password = form.password.value;
+  const email = $("#email").value.trim();
+  const password = $("#password").value;
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    show("Enter a valid email address.", "error");
-    form.email.focus();
+    show(msg, "Enter a valid email address.", "error");
+    $("#email").focus();
     return;
   }
   if (!password) {
-    show("Enter your password.", "error");
-    form.password.focus();
+    show(msg, "Enter your password.", "error");
+    $("#password").focus();
     return;
   }
 
@@ -87,12 +215,22 @@ form.addEventListener("submit", async (e) => {
   btn.textContent = "Signing in…";
   try {
     await signIn(email, password);
-    location.href = next || "jobs.html";
+    saveLock({ tries: 0, until: 0 });
+    location.href = next;
   } catch (err) {
     const raw = err && err.message ? err.message : "";
+    const state = lockState();
+    state.tries += 1;
+    if (state.tries >= MAX_TRIES) {
+      saveLock({ tries: 0, until: Date.now() + LOCK_MS });
+      startCountdown();
+      return;
+    }
+    saveLock(state);
     show(
+      msg,
       /invalid login credentials/i.test(raw)
-        ? "Wrong email or password."
+        ? `Wrong email or password. ${MAX_TRIES - state.tries} attempt${MAX_TRIES - state.tries === 1 ? "" : "s"} left before a 2-minute pause.`
         : /email not confirmed/i.test(raw)
           ? "Confirm your email first — the link is in your inbox."
           : raw || "Could not log in.",
@@ -100,6 +238,58 @@ form.addEventListener("submit", async (e) => {
     );
     btn.disabled = false;
     btn.textContent = "Log in";
+  }
+});
+
+/* ---------- request reset ---------- */
+$("#forgot-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const box = $("#forgot-msg");
+  const b = $("#forgot-btn");
+  const email = $("#forgot-email").value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    show(box, "Enter a valid email address.", "error");
+    return;
+  }
+  b.disabled = true;
+  b.textContent = "Sending…";
+  try {
+    await requestPasswordReset(email);
+    show(box, "If that address has an account, the reset link is on its way.", "ok");
+  } catch (err) {
+    show(box, err && err.message ? err.message : "Could not send the email.", "error");
+  } finally {
+    b.disabled = false;
+    b.textContent = "Send reset link";
+  }
+});
+
+/* ---------- save the new password ---------- */
+$("#recovery-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const box = $("#recovery-msg");
+  const b = $("#recovery-btn");
+  const p1 = $("#new-password").value;
+  const p2 = $("#new-password-2").value;
+  if (p1.length < 8) {
+    show(box, "Use at least 8 characters.", "error");
+    return;
+  }
+  if (p1 !== p2) {
+    show(box, "The two passwords do not match.", "error");
+    return;
+  }
+  b.disabled = true;
+  b.textContent = "Saving…";
+  try {
+    await updatePassword(p1);
+    saveLock({ tries: 0, until: 0 });
+    show(box, "Password updated. Taking you to your account…", "ok");
+    setTimeout(() => { location.href = "account.html"; }, 900);
+  } catch (err) {
+    show(box, err && err.message ? err.message : "Could not update the password.", "error");
+    b.disabled = false;
+    b.textContent = "Save password";
   }
 });
 </script>

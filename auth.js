@@ -105,3 +105,31 @@ export async function requireAuth(redirectTo = "login.html") {
   return session;
 }
 
+/**
+ * A `?next=` value is attacker-controlled. Only same-site relative paths may be
+ * followed — otherwise the login page becomes an open redirect.
+ */
+export function safeNext(raw, fallback = "jobs.html") {
+  if (!raw) return fallback;
+  const value = String(raw).trim();
+  if (!value) return fallback;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return fallback; // http:, javascript:, data:
+  if (value.startsWith("//") || value.includes("\\") || value.includes("..")) return fallback;
+  if (!/^[a-z0-9._~!$&'()*+,;=:@%/?#-]+$/i.test(value)) return fallback;
+  return value;
+}
+
+/** Sends the Supabase recovery email (link lands back on login.html?recovery=1). */
+export async function requestPasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${location.origin}/login.html?recovery=1`,
+  });
+  if (error) throw error;
+}
+
+/** Sets a new password for the recovery session. */
+export async function updatePassword(password) {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+}
+

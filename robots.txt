@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /account.html
+Disallow: /account
+Disallow: /login.html
+Disallow: /login
+Disallow: /signup.html
+Disallow: /signup
+
+Sitemap: https://radarjobs.pages.dev/sitemap.xml

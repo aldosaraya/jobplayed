@@ -2,8 +2,9 @@ name: Refresh job feed
 
 on:
   schedule:
-    # every 2 hours (GitHub retrasa los crons 10-30 min; esto da ~2-2.5h real)
-    - cron: "0 */2 * * *"
+    # hourly: the DB mirror pulls this file at :15 and applies it at :20.
+    # GitHub delays crons 10-30 min, so the real cadence is ~1-1.5h.
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 permissions:
